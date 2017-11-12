@@ -1,5 +1,5 @@
 module.exports = function(RED) {
-    var nforce = require('nforce');
+    var nforce = require('./nforce_wrapper');
 
     function Query(config) {
         RED.nodes.createNode(this, config);
@@ -15,21 +15,7 @@ module.exports = function(RED) {
             }
 
             // create connection object
-            const orgOptions = {
-                clientId: this.connection.consumerKey,
-                clientSecret: this.connection.consumerSecret,
-                redirectUri: this.connection.callbackUrl,
-                environment: this.connection.environment,
-                mode: 'single'
-            };
-
-            // Overwrite the endpoints eventually
-            if (this.connection.poturl) {
-                orgOptions.authEndpoint = this.connection.poturl;
-                orgOptions.testAuthEndpoint = this.connection.poturl;
-            }
-
-            const org = nforce.createConnection(orgOptions);
+            const org = nforce.createConnection(this.connection);
 
             // auth and run query
             org

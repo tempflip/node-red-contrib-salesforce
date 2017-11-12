@@ -6,6 +6,11 @@
         "name": "Jeff Douglas",
         "url": "http://blog.jeffdouglas.com"
     },
+    "contributors": [{
+        "name": "Stephan H. Wissel",
+        "url": "https://wissel.net",
+        "email": "stephan@wissel.net"
+    }],
     "repository": {
         "type": "git",
         "url": "https://github.com/Stwissel/node-red-contrib-salesforce"
