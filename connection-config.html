@@ -1,44 +1,67 @@
 <script type="text/javascript">
-    RED.nodes.registerType('connection-config',{
+    RED.nodes.registerType('connection-config', {
         category: 'config',
         defaults: {
-            name: {value:'', required: true},
-            consumerKey: {required: true},
-            consumerSecret: {required: true},
-            callbackUrl: {required: true},
-            environment: {value: 'production', required: true},
-            username: {required: true},
-            password: {required: true},
+            name: {
+                value: '',
+                required: true
+            },
+            poturl: {
+                value: '',
+                required: false
+            },
+            consumerKey: {
+                required: true
+            },
+            consumerSecret: {
+                required: true
+            },
+            callbackUrl: {
+                required: true
+            },
+            environment: {
+                value: 'production',
+                required: true
+            },
+            useEnvCredentials: {
+                value: true
+            },
+            username: {
+                required: false
+            },
+            password: {
+                required: false
+            },
         },
         label: function() {
             return this.name || this.username + ' connection';
         },
-      	oneditprepare: function() {
+        oneditprepare: function() {
 
-      		setTimeout(function () {
-      			var jqCurDialog = $("[aria-describedby='node-config-dialog']:visible");
-      			var dialogWidth = ($(window).width() - 100);
-      			if (dialogWidth > 700) {
-      				dialogWidth = 700;
-      			}
-      			jqCurDialog.css('width', dialogWidth);
-      			jqCurDialog.css('left', (($(window).width() - dialogWidth) / 2));
-      			// jqCurDialog.css('min-height', '580px');
-            // increase for form field size
-            $(".form-row label").width('150px');
-      		}, 0);
+            setTimeout(function() {
+                var jqCurDialog = $("[aria-describedby='node-config-dialog']:visible");
+                var dialogWidth = ($(window).width() - 100);
+                if (dialogWidth > 700) {
+                    dialogWidth = 700;
+                }
+                jqCurDialog.css('width', dialogWidth);
+                jqCurDialog.css('left', (($(window).width() - dialogWidth) / 2));
+                // jqCurDialog.css('min-height', '580px');
+                // increase for form field size
+                $(".form-row label").width('150px');
+            }, 0);
 
         },
         // reset the form label size
         oneditsave: function() {
-          $(".form-row label").width('100px');
+            $(".form-row label").width('100px');
         },
         // reset the form label size
         oneditcancel: function() {
-          $(".form-row label").width('100px');
+            $(".form-row label").width('100px');
         },
         oneditdelete: function() {
-          $(".form-row label").width('100px');
+            $(".form-row label").width('100px');
         }
     });
 </script>
@@ -47,6 +70,10 @@
     <div class="form-row">
         <label for="node-config-input-name"><i class="icon-bookmark"></i> Name</label>
         <input type="text" id="node-config-input-name">
+    </div>
+    <div class="form-row">
+        <label for="node-config-input-poturl"><i class="icon-bookmark"></i> Instance URL</label>
+        <input type="text" id="node-config-input-poturl">
     </div>
     <div class="form-row" style="white-space:nowrap">
         <label for="node-config-input-consumerKey"><i class="fa fa-key"></i> Consumer Key</label>
@@ -68,6 +95,10 @@
         </select>
     </div>
     <div class="form-row">
+        <label for="node-config-input-useEnvCredentials"><i class="fa fa-user"></i> Use environment credentials</label>
+        <input type="checkbox" id="node-config-input-useEnvCredentials">
+    </div>
+    <div class="form-row">
         <label for="node-config-input-username"><i class="fa fa-user"></i> Username</label>
         <input type="text" id="node-config-input-username">
     </div>
@@ -75,4 +106,25 @@
         <label for="node-config-input-password"><i class="fa fa-lock"></i> Password</label>
         <input type="password" id="node-config-input-password">
     </div>
+</script>
+
+<script type="text/x-red" data-help-name="connection-config">
+    <h3>Setting up a config node</h3>
+    <ul>
+        <li><b>Name</b>: NodeRED internal name of the connection. When you use environment credentials: prefix of the credential variables (see below)
+        </li>
+        <li><b>Instance URL</b>: URL to your Salesforce instance (optional). Use it when you get "invalid client id" errors when connecting to Salesforce or when you use a ScratchOrg
+        </li>
+        <li><b>Consumer Key / Consumer Secret</b>: Values from the Connected App setting in your instance
+        </li>
+        <li><b>Callback URL</b>: needs to match the setting in the connected app. use <code>&lt;NodeRedURL&gt;/oauth/_callback</code> as default
+        </li>
+        <li><b>Environment</b>: Production or Sandbox. DevEditions are Sandbox
+        </li>
+        <li><b>Use environment credentials</b>: Ignores the username/password below and tries to read environment variables (e.g from a Heroku deployment). The variables are the name of this node and _UserName and _Password. So if this Node is called SFTest,
+            it will look for <code>SFTest_UserName</code> and <code>SFTest_PassWord</code>. Typically this is the integration user
+        </li>
+        <li><b>Username/Password</b>: Credentials to get an Oauth token. Typically integration user. Not recommended, use environment instead
+        </li>
+    </ul>
 </script>
