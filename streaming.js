@@ -11,9 +11,16 @@ module.exports = function(RED) {
 
         org.authenticate({ username: this.connection.username, password: this.connection.password }, function(err, oauth) {
             if (err) node.error(err);
-
+            const opts = { 'x': 'y' };
+            if (config.topicType === 'platform') {
+                opts.isPlatformEvent = true;
+            } else if (config.topicType === 'generic') {
+                opts.isSystem = true;
+            }
+            opts.topic = config.pushTopic;
+            node.log(JSON.stringify(opts));
             var client = org.createStreamClient();
-            var stream = client.subscribe({ topic: config.pushTopic });
+            var stream = client.subscribe(opts);
             node.log('Subscribing to topic: ' + config.pushTopic);
 
             stream.on('error', function(err) {
