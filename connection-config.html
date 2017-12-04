@@ -51,7 +51,23 @@
                 $(".form-row label").width('150px');
             }, 0);
 
+            $("#node-config-input-useEnvCredentials").click(function() {
+                this.showhideCredentials();
+            });
+
+            this.showhideCredentials();
+
         },
+
+        // Show or hide credentials
+        showhideCredentials: function() {
+            if ($("#node-config-input-useEnvCredentials").value == true) {
+                $(".credentials").style.display = "none";
+            } else {
+                $(".credentials").style.display = "block";
+            }
+        },
+
         // reset the form label size
         oneditsave: function() {
             $(".form-row label").width('100px');
@@ -94,11 +110,11 @@
           <option value="sandbox">Sandbox</option>
         </select>
     </div>
-    <div class="form-row">
-        <label for="node-config-input-useEnvCredentials"><i class="fa fa-user"></i> Use environment credentials</label>
+    <div class="form-row credentials">
         <input type="checkbox" id="node-config-input-useEnvCredentials">
+        <label for="node-config-input-useEnvCredentials"><i class="fa fa-user"></i> Use environment credentials</label>
     </div>
-    <div class="form-row">
+    <div class="form-row credentials">
         <label for="node-config-input-username"><i class="fa fa-user"></i> Username</label>
         <input type="text" id="node-config-input-username">
     </div>
