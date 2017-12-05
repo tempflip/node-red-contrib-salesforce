@@ -52,31 +52,26 @@
             }, 0);
 
             $("#node-config-input-useEnvCredentials").change(function() {
-                this.showhideCredentials();
+                if ($("#node-config-input-useEnvCredentials").val()) {
+                    $(".credentials").hide();
+                } else {
+                    $(".credentials").show();
+                }
             });
-
-        },
-
-        // Show or hide credentials
-        showhideCredentials: function() {
-            if ($("#node-config-input-useEnvCredentials").val()) {
-                $(".credentials").hide();
-            } else {
-                $(".credentials").show();
-            }
-        },
-
-        // reset the form label size
-        oneditsave: function() {
-            $(".form-row label").width('100px');
-        },
-        // reset the form label size
-        oneditcancel: function() {
-            $(".form-row label").width('100px');
-        },
-        oneditdelete: function() {
-            $(".form-row label").width('100px');
         }
+    },
+
+    // reset the form label size
+    oneditsave: function() {
+        $(".form-row label").width('100px');
+    },
+    // reset the form label size
+    oneditcancel: function() {
+        $(".form-row label").width('100px');
+    },
+    oneditdelete: function() {
+        $(".form-row label").width('100px');
+    }
     });
 </script>
 
