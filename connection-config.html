@@ -51,20 +51,18 @@
                 $(".form-row label").width('150px');
             }, 0);
 
-            $("#node-config-input-useEnvCredentials").click(function() {
+            $("#node-config-input-useEnvCredentials").change(function() {
                 this.showhideCredentials();
             });
-
-            this.showhideCredentials();
 
         },
 
         // Show or hide credentials
         showhideCredentials: function() {
-            if ($("#node-config-input-useEnvCredentials").value == true) {
-                $(".credentials").style.display = "none";
+            if ($("#node-config-input-useEnvCredentials").val()) {
+                $(".credentials").hide();
             } else {
-                $(".credentials").style.display = "block";
+                $(".credentials").show();
             }
         },
 
@@ -92,14 +90,6 @@
         <input type="text" id="node-config-input-poturl">
     </div>
     <div class="form-row" style="white-space:nowrap">
-        <label for="node-config-input-consumerKey"><i class="fa fa-key"></i> Consumer Key</label>
-        <input type="text" id="node-config-input-consumerKey">
-    </div>
-    <div class="form-row" style="white-space:nowrap">
-        <label for="node-config-input-consumerSecret"><i class="fa fa-user-secret"></i> Consumer Secret</label>
-        <input type="password" id="node-config-input-consumerSecret">
-    </div>
-    <div class="form-row" style="white-space:nowrap">
         <label for="node-config-input-callbackUrl"><i class="fa fa-history"></i> Callback URL</label>
         <input type="text" id="node-config-input-callbackUrl" placeholder="http://localhost:3000/oauth/_callback">
     </div>
@@ -113,6 +103,14 @@
     <div class="form-row credentials">
         <input type="checkbox" id="node-config-input-useEnvCredentials">
         <label for="node-config-input-useEnvCredentials"><i class="fa fa-user"></i> Use environment credentials</label>
+    </div>
+    <div class="form-row credentials" style="white-space:nowrap">
+        <label for="node-config-input-consumerKey"><i class="fa fa-key"></i> Consumer Key</label>
+        <input type="text" id="node-config-input-consumerKey">
+    </div>
+    <div class="form-row credentials" style="white-space:nowrap">
+        <label for="node-config-input-consumerSecret"><i class="fa fa-user-secret"></i> Consumer Secret</label>
+        <input type="password" id="node-config-input-consumerSecret">
     </div>
     <div class="form-row credentials">
         <label for="node-config-input-username"><i class="fa fa-user"></i> Username</label>
@@ -131,16 +129,16 @@
         </li>
         <li><b>Instance URL</b>: URL to your Salesforce instance (optional). Use it when you get "invalid client id" errors when connecting to Salesforce or when you use a ScratchOrg
         </li>
-        <li><b>Consumer Key / Consumer Secret</b>: Values from the Connected App setting in your instance
-        </li>
         <li><b>Callback URL</b>: needs to match the setting in the connected app. use <code>&lt;NodeRedURL&gt;/oauth/_callback</code> as default
         </li>
         <li><b>Environment</b>: Production or Sandbox. DevEditions are Sandbox
         </li>
-        <li><b>Use environment credentials</b>: Ignores the username/password below and tries to read environment variables (e.g from a Heroku deployment). The variables are the name of this node and _UserName and _Password. So if this Node is called SFTest,
-            it will look for <code>SFTest_UserName</code> and <code>SFTest_PassWord</code>. Typically this is the integration user
+        <li><b>Use environment credentials</b>: Ignores the Consumer Key, Consumer Secret, username/password below and tries to read environment variables (e.g from a Heroku deployment). The variables are the name of this node and _ConsumerKey, _ConsumerSecret,
+            _UserName and _Password. So if this Node is called SFTest, it will look for <code>SFTest_ConsumerKey</code>,<code>SFTest_ConsumerSecret</code>, <code>SFTest_UserName</code>, <code>SFTest_PassWord</code>. Typically this is the integration user
         </li>
-        <li><b>Username/Password</b>: Credentials to get an Oauth token. Typically integration user. Not recommended, use environment instead
+        <li><b>Consumer Key / Consumer Secret</b>: Values from the Connected App setting in your instance
+        </li>
+        <li><b>Username/Password</b>: Credentials to get an Oauth token. Typically integration user. Not recommended, use environment instead. If missing will also try to read the environment
         </li>
     </ul>
 </script>

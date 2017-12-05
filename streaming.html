@@ -25,6 +25,9 @@
         icon: "salesforce.png",
         label: function() {
             return this.name || 'streaming';
+        },
+        oneditsave: function() {
+            this.topicType = $("#node-config-input-topicType:selected").val();
         }
     });
 </script>
