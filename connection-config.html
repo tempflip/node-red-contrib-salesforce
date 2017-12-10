@@ -137,18 +137,33 @@
     <ul>
         <li><b>Name</b>: NodeRED internal name of the connection. When you use environment credentials: prefix of the credential variables (see below)
         </li>
-        <li><b>Instance URL</b>: URL to your Salesforce instance (optional). Use it when you get "invalid client id" errors when connecting to Salesforce or when you use a ScratchOrg
-        </li>
         <li><b>Callback URL</b>: needs to match the setting in the connected app. use <code>&lt;NodeRedURL&gt;/oauth/_callback</code> as default
         </li>
-        <li><b>Environment</b>: Production or Sandbox. DevEditions are Sandbox
+        <li><b>Environment</b>: Production or Sandbox. DevEditions are Sandbox. When you pick the "custom" option, you can specify the URL of your specific instance. This avoids potential "connection" error that sometimes occurs with oauth
         </li>
-        <li><b>Use environment credentials</b>: Ignores the Consumer Key, Consumer Secret, username/password below and tries to read environment variables (e.g from a Heroku deployment). The variables are the name of this node and _ConsumerKey, _ConsumerSecret,
-            _UserName and _Password. So if this Node is called SFTest, it will look for <code>SFTest_ConsumerKey</code>,<code>SFTest_ConsumerSecret</code>, <code>SFTest_UserName</code>, <code>SFTest_PassWord</code>. Typically this is the integration user
+        <li><b>Instance URL</b> (only shows for Environment "custom"): URL to your Salesforce instance (optional). Use it when you get "invalid client id" errors when connecting to Salesforce or when you use a ScratchOrg
         </li>
-        <li><b>Consumer Key / Consumer Secret</b>: Values from the Connected App setting in your instance
+        <li><b>Use environment credentials</b>: Ignores the credential entries below and tries to read environment variables (e.g from a Heroku deployment). The variables are the name of this node and _ConsumerKey, _ConsumerSecret, _UserName and _Password.
+            So if this Node is called <code>SFTest</code>, it will look for:
+            <ul>
+                <li>Consumer Key: <code>SFTest_ConsumerKey</code></li>
+                <li>Consumer Secret: <code>SFTest_ConsumerSecret</code></li>
+                <li>User Name: <code>SFTest_UserName</code></li>
+                <li>Password: <code>SFTest_PassWord</code></li>
+            </ul>
+            Typically user name used here is the integration user
         </li>
-        <li><b>Username/Password</b>: Credentials to get an Oauth token. Typically integration user. Not recommended, use environment instead. If missing will also try to read the environment
+        <li>Environment credentials <b>unchecked</b>: Fill in the values (will get updated in future)
+            <ul>
+                <li><b>Consumer Key</b>: Values from the Connected App setting in your instance
+                </li>
+                <li><b>Consumer Secret</b>: Values from the Connected App setting in your instance
+                </li>
+                <li><b>Username</b>: Credentials to get an Oauth token. Typically integration user. Not recommended, use environment instead
+                </li>
+                <li><b>Username/Password</b>: Credentials to get an Oauth token. Typically integration user. Not recommended, use environment instead
+                </li>
+            </ul>
         </li>
     </ul>
 </script>

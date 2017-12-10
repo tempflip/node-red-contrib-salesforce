@@ -8,6 +8,7 @@ module.exports = function(RED) {
             //nforce only needs production/sandbox
             this.environment = n.environment.substr(6);
             this.poturl = n.poturl;
+            this.usePotUrl = true;
         } else {
             this.environment = n.environment;
         }

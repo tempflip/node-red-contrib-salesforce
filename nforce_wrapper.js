@@ -11,8 +11,8 @@ module.exports = {
             mode: 'single'
         };
 
-        // Overwrite the endpoints eventually
-        if (configOptions.poturl) {
+        // Overwrite the endpoints eventually - access instance directly
+        if (configOptions.usePotUrl) {
             orgOptions.authEndpoint = configOptions.poturl;
             orgOptions.testAuthEndpoint = configOptions.poturl;
         }
