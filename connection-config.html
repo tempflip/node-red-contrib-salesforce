@@ -11,10 +11,10 @@
                 required: false
             },
             consumerKey: {
-                required: true
+                required: false
             },
             consumerSecret: {
-                required: true
+                required: false
             },
             callbackUrl: {
                 required: true
@@ -37,7 +37,7 @@
             return this.name || this.username + ' connection';
         },
         oneditprepare: function() {
-
+            debugger;
             setTimeout(function() {
                 var jqCurDialog = $("[aria-describedby='node-config-dialog']:visible");
                 var dialogWidth = ($(window).width() - 100);
@@ -52,15 +52,12 @@
             }, 0);
 
             $("#node-config-input-useEnvCredentials").change(function() {
-                if ($("#node-config-input-useEnvCredentials").val()) {
-                    $(".credentials").hide();
-                } else {
-                    $(".credentials").show();
-                }
+                $(".credentials").toggle(!this.checked);
             });
 
             $("#node-config-input-environment").change(function() {
-                if ($("#node-config-input-environment").val() == 'custom') {
+                var curEnv = $("#node-config-input-environment");
+                if (curEnv.val() && curEnv.val().substring(0, 6) == 'custom') {
                     $("#node-config-rown-poturl").show();
                 } else {
                     $("#node-config-rown-poturl").hide();
@@ -70,14 +67,20 @@
 
         // reset the form label size
         oneditsave: function() {
-            $(".form-row label").width('100px');
+            if (this.useEnvCredentials) {
+                delete this.username;
+                delete this.password;
+                delete this.consumerKey;
+                delete this.consumerSecret;
+            }
+            //$(".form-row label").width('100px');
         },
         // reset the form label size
         oneditcancel: function() {
-            $(".form-row label").width('100px');
+            //$(".form-row label").width('100px');
         },
         oneditdelete: function() {
-            $(".form-row label").width('100px');
+            //$(".form-row label").width('100px');
         }
     });
 </script>
@@ -85,44 +88,47 @@
 <script type="text/x-red" data-template-name="connection-config">
     <div class="form-row">
         <label for="node-config-input-name"><i class="icon-bookmark"></i> Name</label>
-        <input type="text" id="node-config-input-name">
+        <input type="text" id="node-config-input-name" />
     </div>
     <div class="form-row" style="white-space:nowrap">
         <label for="node-config-input-callbackUrl"><i class="fa fa-history"></i> Callback URL</label>
-        <input type="text" id="node-config-input-callbackUrl" placeholder="http://localhost:3000/oauth/_callback">
+        <input type="text" id="node-config-input-callbackUrl" placeholder="http://localhost:3000/oauth/_callback" />
     </div>
     <div class="form-row">
         <label for="node-config-input-environment"><i class="fa fa-tasks"></i> Environment</label>
         <select id="node-config-input-environment">
           <option value="production">Production</option>
           <option value="sandbox">Sandbox</option>
-          <option value="custom">Custom</option>
+          <option value="customproduction">Production (Custom)</option>
+          <option value="customsandbox">Sandbox (Custom)</option>
         </select>
     </div>
     <div class="form-row" id="node-config-rown-poturl">
         <label for="node-config-input-poturl"><i class="icon-bookmark"></i> Instance URL</label>
-        <input type="text" id="node-config-input-poturl">
+        <input type="text" id="node-config-input-poturl" />
     </div>
-    <div class="form-row">
-        <input type="checkbox" id="node-config-input-useEnvCredentials">
-        <label style="display: inline; width: 200px" for="node-config-input-useEnvCredentials"><i class="fa fa-user"></i> Use environment for credentials</label>
+    <div class="form-roww">
+        <label for="node-config-input-useEnvCredentials">
+        <input type="checkbox" id="node-config-input-useEnvCredentials" />
+        <i class="fa fa-user"></i> Use environment for credentials
+    </label>
 
     </div>
     <div class="form-row credentials" style="white-space:nowrap">
         <label for="node-config-input-consumerKey"><i class="fa fa-key"></i> Consumer Key</label>
-        <input type="text" id="node-config-input-consumerKey">
+        <input type="text" id="node-config-input-consumerKey" />
     </div>
     <div class="form-row credentials" style="white-space:nowrap">
         <label for="node-config-input-consumerSecret"><i class="fa fa-user-secret"></i> Consumer Secret</label>
-        <input type="password" id="node-config-input-consumerSecret">
+        <input type="password" id="node-config-input-consumerSecret" />
     </div>
     <div class="form-row credentials">
         <label for="node-config-input-username"><i class="fa fa-user"></i> Username</label>
-        <input type="text" id="node-config-input-username">
+        <input type="text" id="node-config-input-username" />
     </div>
     <div class="form-row credentials">
         <label for="node-config-input-password"><i class="fa fa-lock"></i> Password</label>
-        <input type="password" id="node-config-input-password">
+        <input type="password" id="node-config-input-password" />
     </div>
 </script>
 

@@ -13,7 +13,7 @@ module.exports = function(RED) {
             if (err) node.error(err);
             const opts = {};
             if (config.topicType === 'platform') {
-                opts.isPlatformEvent = true;
+                opts.isEvent = true;
             } else if (config.topicType === 'generic') {
                 opts.isSystem = true;
             }
