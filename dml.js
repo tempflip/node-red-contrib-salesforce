@@ -47,7 +47,7 @@ module.exports = function(RED) {
                     return org.upsert({ sobject: obj });
 
                 } else {
-                    return org.delete({ sobject: obj })
+                    return org.delete({ sobject: obj });
                 }
 
             }).then(function(results) {
@@ -56,7 +56,7 @@ module.exports = function(RED) {
                 msg.payload = {
                     success: true,
                     object: config.object.toLowerCase()
-                }
+                };
 
                 if (config.action === 'insert') {
                     _.extend(msg.payload, { id: results.id, 'action': 'insert' });
@@ -82,4 +82,4 @@ module.exports = function(RED) {
         });
     }
     RED.nodes.registerType("dml", Dml);
-}
+};
