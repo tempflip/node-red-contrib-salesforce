@@ -13,7 +13,7 @@ module.exports = function(RED) {
         org.authenticate({ username: this.connection.username, password: this.connection.password }, function(err, oauth) {
             if (err) {
                 node.status({ fill: 'red', shape: 'dot', text: 'Error:' + err.message });
-                node.error(err);
+                return node.error(err, msg);
             }
             const opts = {};
             if (config.topicType === 'platform') {
@@ -30,7 +30,7 @@ module.exports = function(RED) {
             stream.on('error', function(err) {
                 node.log('Subscription error!!!');
                 node.status({ fill: 'red', shape: 'dot', text: 'Error:' + err.message });
-                node.log(err);
+                node.log(err, msg);
                 client.disconnect();
             });
 

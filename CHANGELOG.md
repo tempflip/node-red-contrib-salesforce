@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.1
+
+- Backported improvements from benariss
+  - streaming.js -> return error instead of throwing
+  - all JS -> return errors
+
 ## 0.1.0
 
 ### Environment / Versions
