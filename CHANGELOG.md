@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.2
+- Added acceptance of credentials from msg.sf object (concluded backports from benariss)
+- fixed error throw for inbound message to be compatible toerror node
+
 ## 0.1.1
 
 - Backported improvements from benariss

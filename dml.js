@@ -19,6 +19,25 @@ module.exports = function(RED) {
             if (msg.hasOwnProperty("object") && config.object === '') {
                 config.object = msg.object;
             }
+            
+            // Check if credentials can be used from the msg object
+            if (config.allowMsgCredentials && msg.hasOwnProperty("sf")) {
+                //TODO: Do we really need to check for empty configuration values
+                // or is it OK to overwrite when sf values are present?
+                if (msg.sf.consumerKey && this.connection.consumerKey === '') {
+                    this.connection.consumerKey = msg.sf.consumerKey;
+                }
+                if (msg.sf.consumerSecret && this.connection.consumerSecret === '') {
+                    this.connection.consumerSecret = msg.sf.consumerSecret;
+                }
+                if (msg.sf.username && this.connection.username === '') {
+                    this.connection.username = msg.sf.username;
+                }
+                if (msg.sf.password && this.connection.password === '') {
+                    this.connection.password = msg.sf.password;
+                }
+
+            }
 
             // create connection object
             var org = nforce.createConnection({
