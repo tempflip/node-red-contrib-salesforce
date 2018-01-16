@@ -1,5 +1,8 @@
 module.exports = function(RED) {
     const nforce = require('./nforce_wrapper');
+    
+    // TODO: Add incoming connection to change
+    // Subscription topic and provide credentials
 
     function Streaming(config) {
         RED.nodes.createNode(this, config);

@@ -11,9 +11,11 @@
                 required: false
             },
             consumerKey: {
+                value: '',
                 required: false
             },
             consumerSecret: {
+                value: '',
                 required: false
             },
             callbackUrl: {
@@ -26,10 +28,15 @@
             useEnvCredentials: {
                 value: true
             },
+            allowMsgCredentials: {
+                value: false
+            },
             username: {
+                value: '',
                 required: false
             },
             password: {
+                value: '',
                 required: false
             },
         },
@@ -107,12 +114,17 @@
         <label for="node-config-input-poturl"><i class="icon-bookmark"></i> Instance URL</label>
         <input type="text" id="node-config-input-poturl" />
     </div>
-    <div class="form-roww">
+    <div class="form-row">
         <label for="node-config-input-useEnvCredentials">
-        <input type="checkbox" id="node-config-input-useEnvCredentials" />
-        <i class="fa fa-user"></i> Use environment for credentials
-    </label>
-
+        	<input type="checkbox" id="node-config-input-useEnvCredentials" />
+        	<i class="fa fa-user"></i> Allow credentials in msg object
+    	</label>
+    </div>
+    <div class="form-row">
+        <label for="node-config-input-useEnvCredentials">
+        	<input type="checkbox" id="node-config-input-useEnvCredentials" />
+        	<i class="fa fa-user"></i> Use environment for credentials
+    	</label>
     </div>
     <div class="form-row credentials" style="white-space:nowrap">
         <label for="node-config-input-consumerKey"><i class="fa fa-key"></i> Consumer Key</label>
@@ -143,6 +155,7 @@
         </li>
         <li><b>Instance URL</b> (only shows for Environment "custom"): URL to your Salesforce instance (optional). Use it when you get "invalid client id" errors when connecting to Salesforce or when you use a ScratchOrg
         </li>
+        <li><b>Allow credentials in msg object</b>: With this option enabled the configuration is checking for the <code>sf</code> property in the msg object and retrieves username, password, ConsumerKey and ConsumerSecret from it. (Thx to benariss for the idea/code)</li>
         <li><b>Use environment credentials</b>: Ignores the credential entries below and tries to read environment variables (e.g from a Heroku deployment). The variables are the name of this node and _ConsumerKey, _ConsumerSecret, _UserName and _Password.
             So if this Node is called <code>SFTest</code>, it will look for:
             <ul>
