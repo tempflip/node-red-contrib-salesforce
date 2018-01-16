@@ -1,18 +1,41 @@
 module.exports = function(RED) {
-    var nforce = require('./nforce_wrapper');
+    const nforce = require('./nforce_wrapper');
 
     function Query(config) {
         RED.nodes.createNode(this, config);
         this.connection = RED.nodes.getNode(config.connection);
-        var node = this;
+        const node = this;
+        var query = '';
         this.on('input', function(msg) {
             // show initial status of progress
             node.status({ fill: 'green', shape: 'ring', text: 'connecting....' });
 
             // use msg query if node's query is blank
             if (msg.hasOwnProperty('query') && config.query === '') {
-                config.query = msg.query;
+                query = msg.query;
+            } else {
+                query = config.query;
             }
+            
+            // Check if credentials can be used from the msg object
+            if (config.allowMsgCredentials && msg.hasOwnProperty("sf")) {
+                //TODO: Do we really need to check for empty configuration values
+                // or is it OK to overwrite when sf values are present?
+                if (msg.sf.consumerKey && this.connection.consumerKey === '') {
+                    this.connection.consumerKey = msg.sf.consumerKey;
+                }
+                if (msg.sf.consumerSecret && this.connection.consumerSecret === '') {
+                    this.connection.consumerSecret = msg.sf.consumerSecret;
+                }
+                if (msg.sf.username && this.connection.username === '') {
+                    this.connection.username = msg.sf.username;
+                }
+                if (msg.sf.password && this.connection.password === '') {
+                    this.connection.password = msg.sf.password;
+                }
+
+            }
+
 
             // create connection object
             const org = nforce.createConnection(this.connection);
@@ -21,7 +44,7 @@ module.exports = function(RED) {
             org
                 .authenticate({ username: this.connection.username, password: this.connection.password })
                 .then(function() {
-                    return org.search({ search: config.query });
+                    return org.search({ search: query });
                 })
                 .then(function(results) {
                     msg.payload = {
@@ -33,8 +56,8 @@ module.exports = function(RED) {
                     node.status({});
                 })
                 .error(function(err) {
-                    node.status({ fill: 'red', shape: 'dot', text: 'Error!' });
-                    node.error(err);
+                    node.status({ fill: 'red', shape: 'dot', text: 'Error:' + err.message + '!' });
+                    node.error(err, msg);
                 });
         });
     }

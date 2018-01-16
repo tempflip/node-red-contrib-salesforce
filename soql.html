@@ -1,17 +1,28 @@
 <script type="text/javascript">
-    RED.nodes.registerType('soql',{
+    RED.nodes.registerType('soql', {
         category: 'Salesforce',
         color: '#C0DEED',
         defaults: {
-          name: {value:""},
-          query: {value:""},
-          connection: {value:"", type:"connection-config", required: true}
+            name: {
+                value: ""
+            },
+            query: {
+                value: ""
+            },
+            connection: {
+                value: "",
+                type: "connection-config",
+                required: true
+            },
+            fetchAll: {
+                value: false
+            }
         },
-        inputs:1,
-        outputs:1,
+        inputs: 1,
+        outputs: 1,
         icon: "salesforce.png",
         label: function() {
-            return this.name||"soql query";
+            return this.name || "soql query";
         }
     });
 </script>
@@ -29,19 +40,25 @@
         <label for="node-input-query"><i class="fa fa-database"></i> Query</label>
         <textarea id="node-input-query" style="width:300px"></textarea>
     </div>
+    <div class="form-row" style="white-space:nowrap">
+        <label for="node-input-fetchAll"><i class="fa fa-list"></i> Fetch all result records</label>
+        <input type="checkbox" id="node-input-fetchAll" style="position:absolute;left:20px" />
+    </div>
 </script>
 
 <script type="text/x-red" data-help-name="soql">
     <p>Executes a SOQL query.</p>
-<pre>
+    <pre>
   select id, name
   from contact
   limit 2
 </pre>
     <p>The resulting message has the following properties:
-    <ul><li>msg.payload.size - the number of records returned from the query.</li>
-    <li>msg.payload.records - the array of records returned from the query.</li>
-    </ul></p>
+        <ul>
+            <li>msg.payload.size - the number of records returned from the query.</li>
+            <li>msg.payload.records - the array of records returned from the query.</li>
+        </ul>
+    </p>
     <p>The query can be configured in the node, however if left blank, the query should be set in an incoming message on <code>msg.query</code>.</p>
     <p>See the <a href="https://developer.salesforce.com/docs/atlas.en-us.soql_sosl.meta/soql_sosl" target="_blank">Salesforce SOQL documentation</a> for more information.</p>
 </script>
