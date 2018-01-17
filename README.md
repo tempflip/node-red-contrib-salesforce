@@ -1,5 +1,7 @@
 # node-red-contrib-salesforce
 
+![Build status of master branch](https://travis-ci.org/Stwissel/node-red-contrib-salesforce.svg?branch=master)
+
 A set of [Node-RED](http://www.nodered.org) nodes to interact with Salesforce and Force.com.
 
 ## Install
