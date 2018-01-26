@@ -5,24 +5,22 @@
 A set of [Node-RED](http://www.nodered.org) nodes to interact with Salesforce and Force.com.
 
 ## Install
--------
 
 Run the following command in the root directory of your Node-RED install
 
 ```
-npm install node-red-contrib-salesforce
+npm install -s node-red-contrib-salesforce
 ```
 
 ## Usage
 
 Each node uses a connection object to hold and share Salesforce connected app settings (consumer key, consumer secret, username, etc.). This determines the org that each node operates against.
 
-The credential fields can be left blank and passed in the message (msg.sf), this allows you to store them outside of the flow so that they will not be exposed when exporting it.
-
 ### SOQL
 
-<p>Executes a SOQL query.</p>
-<pre>
+Executes a SOQL query
+
+```
 select id, name
 from contact
 limit 2
@@ -32,10 +30,18 @@ limit 2
 <li>msg.payload.records - the array of records returned from the query.</li>
 </ul></p>
 <p>The query can be configured in the node, however if left blank, the query should be set in an incoming message on <code>msg.query</code>.</p>
-<p>By default the query will return the first 2,000 records from the query result.  If you wish to return the full result set then tick the 'Fetch all result records' checkbox.</p>
 <p>See the <a href="https://developer.salesforce.com/docs/atlas.en-us.soql_sosl.meta/soql_sosl">Salesforce SOQL documentation</a> for more information.</p>
 
-<h3>SOSL</h3>
+The resulting message has the following properties:
+
+- msg.payload.size - the number of records returned from the query.
+- msg.payload.records - the array of records returned from the query.
+
+The query can be configured in the node, however if left blank, the query should be set in an incoming message on `msg.query`
+
+See the [Salesforce SOQL documentation](https://developer.salesforce.com/docs/atlas.en-us.soql_sosl.meta/soql_sosl) for more information
+
+### SOSL
 
 <p>Executes a SOSL query.</p>
 <pre>
@@ -106,7 +112,7 @@ value: "12345"
 }</pre>
 <p>See the <a href="https://developer.salesforce.com/docs/atlas.en-us.apexcode.meta/apexcode/apex_dml_section.htm#apex_dml_insert">Apex DML Operations</a> for more information.</p>
 
-<h3>Streaming</h3>
+### Streaming
 
 <p>Creates a client that subscribes to a PushTopic for the Streaming API.</p>
 <p>When the client receives a message it sends `msg.payload` with the following:
@@ -124,7 +130,7 @@ value: "12345"
 }</pre>
 <p>See the <a href="https://developer.salesforce.com/docs/atlas.en-us.api_streaming.meta/api_streaming/quick_start_workbench.htm">Quick Start Using Workbench</a> to get started or the <a href="https://developer.salesforce.com/docs/atlas.en-us.api_streaming.meta/api_streaming/">Streaming API documentation</a> for complete details.</p>
 
-<h3>OBM</h3>
+### Outbound Messages (OBM)
 
 <p>When used with an http in node, parses the XML from a Salesforce Outbound Message to a JSON object.</p>
 <p>The resulting <code>msg.payload</code> should look something like:

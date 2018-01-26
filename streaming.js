@@ -25,17 +25,23 @@ module.exports = function(RED) {
                 opts.isSystem = true;
             }
             opts.topic = config.pushTopic;
-            const client = org.createStreamClient();
-            const stream = client.subscribe(opts);
             const subscriptionMessage = 'Subscription on ' + config.topicType + ' to:' + config.pushTopic;
-            node.log(subscriptionMessage);
-            node.status({ fill: 'blue', shape: 'dot', text: subscriptionMessage });
-            stream.on('error', function(err) {
-                node.log('Subscription error!!!');
-                node.status({ fill: 'red', shape: 'dot', text: 'Error:' + err.message });
-                node.log(err, msg);
-                client.disconnect();
-            });
+
+            try {
+                const client = org.createStreamClient();
+                const stream = client.subscribe(opts);
+                node.log(subscriptionMessage);
+                node.status({ fill: 'blue', shape: 'dot', text: subscriptionMessage });
+                stream.on('error', function(err) {
+                    node.log('Subscription error!!!');
+                    node.status({ fill: 'red', shape: 'dot', text: 'Error:' + err.message });
+                    node.log(err, msg);
+                    client.disconnect();
+                });
+            } catch (ex) {
+                node.status({ fill: 'red', shape: 'dot', text: 'Error:' + ex.message });
+                return node.error(ex, ex.message);
+            }
 
             stream.on('data', function(data) {
                 node.status({ fill: 'green', shape: 'dot', text: 'Receiving data' });
