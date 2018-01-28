@@ -20,7 +20,7 @@
                 required: true
             }
         },
-        inputs: 0,
+        inputs: 1,
         outputs: 1,
         icon: "salesforce.png",
         label: function() {
@@ -63,6 +63,12 @@
         <li>Platform events: Listen to the Platform event API</li>
         <li>Streaming (Push Topic): Listen to changes in sObjects</li>
         <li>Streaming (Generic): Listen to generic Push Topics (deprecated)</li>
+    </ul>
+    <p>Subscription starts only when an incoming message is received once. The following `msg` properties are supported:</p>
+    <ul>
+        <li>`action` with the value `subscribe` or `unsubscribe` (default: `subscribe`): start or stop a subscription</li>
+        <li>`topic` the topic to subscribe to. Default is to use the topic from the config</li>
+        <li>`sf` object containing: `username`, `password`, `consumerKey` and `consumerSecret`. When the configuration allows it (checkbox "allow message credentials"), these values take priority over the configuration values).</li>
     </ul>
     <p>When the client receives a message it sends `msg.payload` with the following:
         <ul>

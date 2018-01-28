@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.4
+
+- Subscriptions now have an incoming connection. Subcriptions don't start on application load, but an incoming message. Message can contain subscribe/unsubscribe command
+
 ## 0.1.3
 
 - Fixed an error where a failed subscription would crash the client
