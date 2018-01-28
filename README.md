@@ -14,7 +14,7 @@ npm install -s node-red-contrib-salesforce
 
 ## Usage
 
-Each node uses a connection object to hold and share Salesforce connected app settings (consumer key, consumer secret, username, etc.). This determines the org that each node operates against.
+Each node uses a connection object to hold and share Salesforce connected app settings (consumer key, consumer secret, username, etc.). This determines the org that each node operates against. Credential information can alternatively been supplied by environment variables (Heroku, Bluemix, Azure friendly) or in the msg object.
 
 ### SOQL
 
@@ -55,7 +55,7 @@ RETURNING Account (Id, Name), Contact (Id, Name)
 <p>The query can be configured in the node, however if left blank, the query should be set in an incoming message on <code>msg.query</code>.</p>
 <p>See the <a href="https://developer.salesforce.com/docs/atlas.en-us.soql_sosl.meta/soql_sosl/sforce_api_calls_sosl.htm">Salesforce SOSL documentation</a> for more information.</p>
 
-<h3>DML</h3>
+### DML
 
 <p>Executes an insert, update, upsert or delete DML statement.</p>
 <p>The action and object can be configured in the node, however if left blank, the following should be set in an incoming message:<ul><li><code>msg.action</code> - the DML action to perform</li><li><code>msg.object</code> - the sObject for the DML action</li></ul></p>
@@ -115,6 +115,13 @@ value: "12345"
 ### Streaming
 
 <p>Creates a client that subscribes to a PushTopic for the Streaming API.</p>
+<p>Subscription starts once a msg is received as input. The msg object payload gets ignored, but the following properties are used when present:</p>
+
+- `action`: `subscribe` or `unsubscribe` When no action is configured it defaults to subscribe. An unknown value for action is interpreted as unsubscribe
+- `topic`: the subscription topic to listen to, defaults to the one from configuration
+- `sf` : object with Salesforce credentials: `username`, `password`, `clientSecret`, `clientToken`. Can have just one of these. Uses configuration values as default
+
+
 <p>When the client receives a message it sends `msg.payload` with the following:
 <ul><li>msg.payload.event - the information on the event that was received.</li>
 <li>msg.payload.sobject - the sobject information received.</li>
