@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.1.4
+## 0.2.0
 
 - Subscriptions now have an incoming connection. Subcriptions don't start on application load, but an incoming message. Message can contain subscribe/unsubscribe command
 
