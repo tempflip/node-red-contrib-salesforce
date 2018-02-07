@@ -15,8 +15,9 @@ module.exports = function(RED) {
             if (action === 'subscribe') {
                 // create connection object
                 node.status({ fill: 'blue', shape: 'ring', text: 'connecting....' });
+                debugger;
                 const org = nforce.createConnection(node.connection, msg);
-                nforce.authenticate(org, config, msg, function(err, oauth) {
+                nforce.authenticate(org, node.connection, msg, function(err, oauth) {
                     if (err) {
                         node.status({ fill: 'red', shape: 'dot', text: 'Error:' + err.message });
                         return node.error(err, err.message);
@@ -32,9 +33,10 @@ module.exports = function(RED) {
                     opts.topic = msg.topic || config.pushTopic;
                     const subscriptionMessage = 'Subscription on ' + topicType + ' to:' + opts.topic;
 
+                    var stream;
                     try {
                         node.client = org.createStreamClient();
-                        const stream = node.client.subscribe(opts);
+                        stream = node.client.subscribe(opts);
                         node.log(subscriptionMessage);
                         node.status({ fill: 'blue', shape: 'dot', text: subscriptionMessage });
                         node.subscriptionActive = true;
