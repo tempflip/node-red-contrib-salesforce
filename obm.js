@@ -37,6 +37,14 @@ module.exports = function(RED) {
                             }
                         });
                         // Prepare the return message for http
+                        if (httpMsg.headers) {
+                            httpMsg.headers['Content-Type'] = 'application/xml';
+                        } else {
+                            httpMsg.headers = {
+                                "Content-Type": "application/xml"
+                            };
+                        }
+
                         httpMsg.payload = `<?xml version="1.0" encoding="UTF-8"?>
     <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">
         <soapenv:Body>

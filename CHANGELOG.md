@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.2.1
+
+- Fixed bug that prevented subscriptions from completion
+- Tested with latest Node-Red release 0.18.2
+- Added header to OBM reply node
+
 ## 0.2.0
 
 - Subscriptions now have an incoming connection. Subcriptions don't start on application load, but an incoming message. Message can contain subscribe/unsubscribe command
