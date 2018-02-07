@@ -1,56 +1,74 @@
 module.exports = function(RED) {
     const nforce = require('./nforce_wrapper');
-    
-    // TODO: Add incoming connection to change
-    // Subscription topic and provide credentials
 
     function Streaming(config) {
-        RED.nodes.createNode(this, config);
-        this.connection = RED.nodes.getNode(config.connection);
         const node = this;
+        RED.nodes.createNode(node, config);
+        node.connection = RED.nodes.getNode(config.connection);
+        node.subscriptionActive = false;
+        node.client = {}; // The client
 
-        // create connection object
-        node.status({ fill: 'blue', shape: 'ring', text: 'connecting....' });
-        const org = nforce.createConnection(this.connection);
+        node.status({ fill: 'gray', shape: 'ring', text: 'idle' });
 
-        org.authenticate({ username: this.connection.username, password: this.connection.password }, function(err, oauth) {
-            if (err) {
-                node.status({ fill: 'red', shape: 'dot', text: 'Error:' + err.message });
-                return node.error(err, msg);
-            }
-            const opts = {};
-            if (config.topicType === 'platform') {
-                opts.isEvent = true;
-            } else if (config.topicType === 'generic') {
-                opts.isSystem = true;
-            }
-            opts.topic = config.pushTopic;
-            const subscriptionMessage = 'Subscription on ' + config.topicType + ' to:' + config.pushTopic;
+        this.on('input', function(msg) {
+            const action = msg.action || 'subscribe';
+            if (action === 'subscribe') {
+                // create connection object
+                node.status({ fill: 'blue', shape: 'ring', text: 'connecting....' });
+                const org = nforce.createConnection(node.connection, msg);
+                nforce.authenticate(org, config, msg, function(err, oauth) {
+                    if (err) {
+                        node.status({ fill: 'red', shape: 'dot', text: 'Error:' + err.message });
+                        return node.error(err, err.message);
+                    }
+                    const opts = {};
+                    const topicType = msg.topicType || config.topicType;
+                    if (topicType === 'platform') {
+                        opts.isEvent = true;
+                    } else if (topicType === 'generic') {
+                        opts.isSystem = true;
+                    }
+                    // Topic in message takes priority over configuration
+                    opts.topic = msg.topic || config.pushTopic;
+                    const subscriptionMessage = 'Subscription on ' + topicType + ' to:' + opts.topic;
 
-            try {
-                const client = org.createStreamClient();
-                const stream = client.subscribe(opts);
-                node.log(subscriptionMessage);
-                node.status({ fill: 'blue', shape: 'dot', text: subscriptionMessage });
-                stream.on('error', function(err) {
-                    node.log('Subscription error!!!');
-                    node.status({ fill: 'red', shape: 'dot', text: 'Error:' + err.message });
-                    node.log(err, msg);
-                    client.disconnect();
+                    try {
+                        node.client = org.createStreamClient();
+                        const stream = node.client.subscribe(opts);
+                        node.log(subscriptionMessage);
+                        node.status({ fill: 'blue', shape: 'dot', text: subscriptionMessage });
+                        node.subscriptionActive = true;
+                        stream.on('error', function(err) {
+                            node.log('Subscription error!!!');
+                            node.status({ fill: 'red', shape: 'dot', text: 'Error:' + err.message });
+                            node.log(err, msg);
+                            node.client.disconnect();
+                            node.subscriptionActive = false;
+                            return node.error(err, err.message);
+                        });
+                    } catch (ex) {
+                        node.status({ fill: 'red', shape: 'dot', text: 'Error:' + ex.message });
+                        return node.error(ex, ex.message);
+                    }
+
+                    stream.on('data', function(data) {
+                        node.status({ fill: 'green', shape: 'dot', text: 'Receiving data' });
+                        node.send({
+                            payload: data
+                        });
+                        node.status({ fill: 'blue', shape: 'dot', text: subscriptionMessage });
+                    });
                 });
-            } catch (ex) {
-                node.status({ fill: 'red', shape: 'dot', text: 'Error:' + ex.message });
-                return node.error(ex, ex.message);
+            } else if (node.subscriptionActive) {
+                // Unsubscribe only for active subscriptions
+                if (node.client.disconnect) {
+                    node.client.disconnect();
+                    node.status({ fill: 'gray', shape: 'ring', text: 'idle' });
+                    node.subscriptionActive = false;
+                }
             }
-
-            stream.on('data', function(data) {
-                node.status({ fill: 'green', shape: 'dot', text: 'Receiving data' });
-                node.send({
-                    payload: data
-                });
-                node.status({ fill: 'blue', shape: 'dot', text: subscriptionMessage });
-            });
         });
     }
+
     RED.nodes.registerType('streaming', Streaming);
 };
