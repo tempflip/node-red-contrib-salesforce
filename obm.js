@@ -37,7 +37,14 @@ module.exports = function(RED) {
                             }
                         });
                         // Prepare the return message for http
-                        httpMsg.payload = "OK"; //TODO: Fix this
+                        httpMsg.payload = `<?xml version="1.0" encoding="UTF-8"?>
+    <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">
+        <soapenv:Body>
+            <notificationsResponse xmlns="http://soap.sforce.com/2005/09/outbound">
+                <Ack>true</Ack>
+           </notificationsResponse>
+        </soapenv:Body>
+    </soapenv:Envelope>`;
                         node.send([returnMsg, httpMsg]);
                         node.status({});
                     } catch (err) {
