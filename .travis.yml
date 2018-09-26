@@ -1,8 +1,12 @@
 language: node_js
 node_js:
-  - "8"
-after_failure:  
-  cat /home/travis/.npm/_logs/*.log  
+  - '8'
+install:
+  - npm install
+cache:
+  directories:
+    - '$HOME/.npm'
+after_failure: cat /home/travis/.npm/_logs/*.log
 deploy:
   provider: npm
   email: stw@linux.com
