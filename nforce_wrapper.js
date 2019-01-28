@@ -16,6 +16,10 @@ const createConnection = function (configOptionsRaw, msg) {
         orgOptions.testAuthEndpoint = configOptions.poturl;
     }
 
+    if (configOptions.apiversion) {
+        orgOptions.apiVersion = configOptions.apiversion;
+    }
+
     const connectionResult = nforce8.createConnection(orgOptions);
     const result = {
         connection: connectionResult,
@@ -66,9 +70,22 @@ const redError = function (redNode, msg, err) {
     redNode.error(err, msg);
 }
 
+/**
+ * Checks for Salesforce headers in msg object to send back to SF
+ * @param {*} payload - the data to be posted
+ * @param {*} msg - the incoming message
+ */
+const extractHeaders = function (payload, msg) {
+    if (payload && msg && msg.sf && msg.sf.headers) {
+        payload.headers = msg.sf.headers;
+    }
+
+}
+
 module.exports = {
     createConnection: createConnection,
     authenticate: authenticate,
     force: nforce8,
-    error: redError
+    error: redError,
+    extractHeaders: extractHeaders
 }

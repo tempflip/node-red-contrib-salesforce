@@ -1,4 +1,4 @@
-module.exports = function(RED) {
+module.exports = function (RED) {
     function ConnectionConfig(n) {
         RED.nodes.createNode(this, n);
         this.consumerKey = n.consumerKey;
@@ -9,8 +9,19 @@ module.exports = function(RED) {
             this.environment = n.environment.substr(6);
             this.poturl = n.poturl;
             this.usePotUrl = true;
+        } else if (n.environment === 'environment') {
+            const envEnv = n.name + '_Environment';
+            const envCandidate = process.env[envEnv];
+            if (envCandidate && envCandidate.substring(0, 1).toLowerCase() === 'p') {
+                this.environment = 'production';
+            } else {
+                this.environment = 'sandbox';
+            }
         } else {
             this.environment = n.environment;
+        }
+        if (n.apiversion) {
+            this.apiversion = n.apiversion;
         }
         this.allowMsgCredentials = n.allowMsgCredentials;
         this.username = n.username;

@@ -39,12 +39,16 @@
                 value: '',
                 required: false
             },
+            apiversion: {
+                value: '',
+                required: true
+            }
         },
-        label: function() {
+        label: function () {
             return this.name || this.username + ' connection';
         },
-        oneditprepare: function() {
-            setTimeout(function() {
+        oneditprepare: function () {
+            setTimeout(function () {
                 var jqCurDialog = $("[aria-describedby='node-config-dialog']:visible");
                 var dialogWidth = ($(window).width() - 100);
                 if (dialogWidth > 700) {
@@ -57,11 +61,11 @@
                 $(".form-row label").width('150px');
             }, 0);
 
-            $("#node-config-input-useEnvCredentials").change(function() {
+            $("#node-config-input-useEnvCredentials").change(function () {
                 $("#credentials").toggle(!this.checked);
             });
 
-            $("#node-config-input-environment").change(function() {
+            $("#node-config-input-environment").change(function () {
                 var curEnv = $("#node-config-input-environment");
                 if (curEnv.val() && curEnv.val().substring(0, 6) == 'custom') {
                     $("#node-config-rown-poturl").show();
@@ -72,7 +76,7 @@
         },
 
         // reset the form label size
-        oneditsave: function() {
+        oneditsave: function () {
             if (this.useEnvCredentials) {
                 delete this.username;
                 delete this.password;
@@ -82,10 +86,10 @@
             //$(".form-row label").width('100px');
         },
         // reset the form label size
-        oneditcancel: function() {
+        oneditcancel: function () {
             //$(".form-row label").width('100px');
         },
-        oneditdelete: function() {
+        oneditdelete: function () {
             //$(".form-row label").width('100px');
         }
     });
@@ -107,9 +111,14 @@
           <option value="sandbox">Sandbox</option>
           <option value="customproduction">Production (Custom)</option>
           <option value="customsandbox">Sandbox (Custom)</option>
-          <option value="custommarketing">Marketing Cloud (Custom)</option>
-          <option value="customcommerce">Commerce Cloud (Custom)</option>
+          <option value="environment">Environment variable</option>
+          <!-- <option value="custommarketing">Marketing Cloud (Custom)</option>
+          <option value="customcommerce">Commerce Cloud (Custom)</option> -->
         </select>
+    </div>
+    <div class="form-row" id="node-config-rown-apiversion">
+        <label for="node-config-input-apiversion"><i class="fas fa-fire-extinguisher"></i> API Version</label>
+        <input type="text" id="node-config-input-apiversion" placeholder="v45.0"/>
     </div>
     <div class="form-row" id="node-config-rown-poturl">
         <label for="node-config-input-poturl"><i class="icon-bookmark"></i> Instance URL</label>
@@ -150,7 +159,9 @@
         </li>
         <li><b>Callback URL</b>: needs to match the setting in the connected app. use <code>&lt;NodeRedURL&gt;/oauth/_callback</code> as default
         </li>
-        <li><b>Environment</b>: Production or Sandbox. DevEditions are Sandbox. When you pick the "custom" option, you can specify the URL of your specific instance. This avoids potential "connection" error that sometimes occurs with oauth
+        <li><b>Environment</b>: Production or Sandbox. DevEditions are Production. When you pick the "custom" option, you can specify the URL of your specific instance.
+             This avoids potential "connection" error that sometimes occurs with oauth. <br />
+             <b>NEW</b> Environment variable: Read the environment from an environemtn variable if this node is called <code>SFTest</code> it will read <code>SFTest_Environment</code> which must be <code>production</code> or <code>sandbox</code>
         </li>
         <li><b>Instance URL</b> (only shows for Environment "custom"): URL to your Salesforce instance (optional). Use it when you get "invalid client id" errors when connecting to Salesforce or when you use a ScratchOrg
         </li>

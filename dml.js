@@ -17,8 +17,9 @@ module.exports = function (RED) {
 
             // create connection object
             const orgResult = nforce.createConnection(this.connection);
-            const payload = nforce.force.createSObject(theObject, msg.payload);
-            const sobj = { sobject: payload };
+            const sobj = nforce.force.createSObject(theObject, msg.payload);
+            const payload = { sobject: sobj };
+            nforce.extractHeaders(payload, msg);
 
             // Auth and run DML
             nforce
@@ -28,19 +29,19 @@ module.exports = function (RED) {
                     const org = orgResult.org;
                     switch (theAction) {
                         case 'insert':
-                            dmlResult = org.insert(sobj);
+                            dmlResult = org.insert(payload);
                             break;
                         case 'update':
-                            dmlResult = org.update(sobj);
+                            dmlResult = org.update(payload);
                             break;
                         case 'upsert':
                             if (msg.hasOwnProperty("externalId")) {
                                 sobj.sobject.setExternalId(msg.externalId.field, msg.externalId.value);
                             }
-                            dmlResult = org.upsert(sobj);
+                            dmlResult = org.upsert(payload);
                             break;
                         case 'delete':
-                            dmlResult = org.delete(sobj);
+                            dmlResult = org.delete(payload);
                             break;
                         default:
                             const err = new Error('Unknown method:' + theAction);

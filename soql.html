@@ -18,13 +18,13 @@
                 value: false
             },
             returnJSON: {
-                value: false
+                value: true
             }
         },
         inputs: 1,
         outputs: 1,
         icon: "salesforce.png",
-        label: function() {
+        label: function () {
             return this.name || "soql query";
         }
     });
@@ -47,10 +47,6 @@
         <label for="node-input-fetchAll"><i class="fa fa-list"></i> Fetch all result records</label>
         <input type="checkbox" id="node-input-fetchAll" style="position:absolute;left:20px" />
     </div>
-    <div class="form-row" style="white-space:nowrap">
-        <label for="node-input-returnJSON"><i class="fa fa-list"></i> Return JSON only</label>
-        <input type="checkbox" id="node-input-returnJSON" style="position:absolute;left:20px" />
-    </div>
 </script>
 
 <script type="text/x-red" data-help-name="soql">
@@ -60,13 +56,7 @@
   from contact
   limit 2
     </pre>
-    <p>If "Return JSON only" is selected, message.payload contains an array of result objects.</p>
-    <p>Otherwise the resulting message has the following properties:
-        <ul>
-            <li>msg.payload.size - the number of records returned from the query.</li>
-            <li>msg.payload.records - the array of javascript nForce objects returned from the query. The nforce objects are useful for doing updates etc., as they have dirty checking and are already structured for an DML update, but do not match what Node-Red debug window shows. </li>
-        </ul>
-    </p>
+    <p>message.payload contains an array of result objects.</p>
     <p>The query can be configured in the node, however if left blank, the query should be set in an incoming message on <code>msg.query</code>.</p>
     <p>See the <a href="https://developer.salesforce.com/docs/atlas.en-us.soql_sosl.meta/soql_sosl" target="_blank">Salesforce SOQL documentation</a> for more information.</p>
 </script>
