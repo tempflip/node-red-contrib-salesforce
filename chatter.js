@@ -36,7 +36,7 @@ module.exports = function (RED) {
                 .authenticate(orgResult.org, orgResult.config)
                 .then(result => {
                     const sobj = { sobject: payload };
-                    return org.insert(sobj)
+                    return orgResult.org.insert(sobj)
                         .catch(err => {
                             node.status({ fill: 'red', shape: 'dot', text: 'Error:' + e.message });
                             node.error(err, msg);

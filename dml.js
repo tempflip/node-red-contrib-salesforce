@@ -1,103 +1,71 @@
-module.exports = function(RED) {
+module.exports = function (RED) {
 
-    var nforce = require('nforce');
-    var _ = require('lodash');
+    var nforce = require('./nforce8_wrapper');
 
     function Dml(config) {
         RED.nodes.createNode(this, config);
         this.connection = RED.nodes.getNode(config.connection);
         var node = this;
-        this.on('input', function(msg) {
+        this.on('input', msg => {
 
             // show initial status of progress
             node.status({ fill: "green", shape: "ring", text: "connecting...." });
 
             // check for overriding message properties
-            if (msg.hasOwnProperty("action") && config.action === '') {
-                config.action = msg.action;
-            }
-            if (msg.hasOwnProperty("object") && config.object === '') {
-                config.object = msg.object;
-            }
-            
-            // Check if credentials can be used from the msg object
-            if (config.allowMsgCredentials && msg.hasOwnProperty("sf")) {
-                //TODO: Do we really need to check for empty configuration values
-                // or is it OK to overwrite when sf values are present?
-                if (msg.sf.consumerKey && this.connection.consumerKey === '') {
-                    this.connection.consumerKey = msg.sf.consumerKey;
-                }
-                if (msg.sf.consumerSecret && this.connection.consumerSecret === '') {
-                    this.connection.consumerSecret = msg.sf.consumerSecret;
-                }
-                if (msg.sf.username && this.connection.username === '') {
-                    this.connection.username = msg.sf.username;
-                }
-                if (msg.sf.password && this.connection.password === '') {
-                    this.connection.password = msg.sf.password;
-                }
-
-            }
+            const theAction = (msg.hasOwnProperty("action") && config.action === '') ? msg.action : config.action;
+            const theObject = (msg.hasOwnPropety("object") && config.object === '') ? msg.object : config.object;
 
             // create connection object
-            var org = nforce.createConnection({
-                clientId: this.connection.consumerKey,
-                clientSecret: this.connection.consumerSecret,
-                redirectUri: this.connection.callbackUrl,
-                environment: this.connection.environment,
-                mode: 'single'
-            });
+            const orgResult = nforce.createConnection(this.connection);
+            const payload = nforce.force.createSObject(theObject, msg.payload);
+            const sobj = { sobject: payload };
 
-            // auth and run query
-            org.authenticate({ username: this.connection.username, password: this.connection.password }).then(function() {
-
-                var obj = nforce.createSObject(config.object, msg.payload);
-                if (config.action === 'insert') {
-                    return org.insert({ sobject: obj });
-
-                } else if (config.action === 'update') {
-                    return org.update({ sobject: obj });
-
-                } else if (config.action === 'upsert') {
-                    // check for a field specified for external id
-                    if (msg.hasOwnProperty("externalId")) {
-                        obj.setExternalId(msg.externalId.field, msg.externalId.value);
+            // Auth and run DML
+            nforce
+                .authenticate(orgResult.org, orgResult.config)
+                .then(oauth => {
+                    let dmlResult;
+                    const org = orgResult.org;
+                    switch (theAction) {
+                        case 'insert':
+                            dmlResult = org.insert(sobj);
+                            break;
+                        case 'update':
+                            dmlResult = org.update(sobj);
+                            break;
+                        case 'upsert':
+                            if (msg.hasOwnProperty("externalId")) {
+                                sobj.sobject.setExternalId(msg.externalId.field, msg.externalId.value);
+                            }
+                            dmlResult = org.upsert(sobj);
+                            break;
+                        case 'delete':
+                            dmlResult = org.delete(sobj);
+                            break;
+                        default:
+                            const err = new Error('Unknown method:' + theAction);
+                            node.status({ fill: 'red', shape: 'dot', text: 'Unknown method:' + theAction });
+                            node.error(err, msg);
                     }
-                    return org.upsert({ sobject: obj });
 
-                } else {
-                    return org.delete({ sobject: obj });
-                }
-
-            }).then(function(results) {
-
-                // cteate a default payload to populate
-                msg.payload = {
-                    success: true,
-                    object: config.object.toLowerCase()
-                };
-
-                if (config.action === 'insert') {
-                    _.extend(msg.payload, { id: results.id, 'action': 'insert' });
-                } else if (config.action === 'update') {
-                    _.extend(msg.payload, { id: msg.payload.id, 'action': 'update' });
-                } else if (config.action === 'upsert') {
-                    if (results.id != null) {
-                        _.extend(msg.payload, { id: results.id, 'action': 'insert' });
-                    } else {
-                        _.extend(msg.payload, { id: msg.externalId, 'action': 'update' });
+                    return dmlResult;
+                }).then(results => {
+                    msg.payload = {
+                        success: true,
+                        object: theObject.toLowerCase(),
+                        action: theAction,
+                        id: (results.id) ? results.id
+                            : (msg.externalId) ? msg.externalId
+                                : msg.payload.id
                     }
-                } else {
-                    _.extend(msg.payload, { id: msg.payload.id, 'action': 'delete' });
-                }
 
-                node.send(msg);
-                node.status({});
-            }).error(function(err) {
-                node.status({ fill: "red", shape: "dot", text: "Error!" });
-                node.error(err, msg);
-            });
-
+                    node.send(msg);
+                    node.status({});
+                })
+                .catch(function (err) {
+                    node.status({ fill: 'red', shape: 'dot', text: 'Error:' + e.message });
+                    node.error(err, msg);
+                });
         });
     }
     RED.nodes.registerType("dml", Dml);
