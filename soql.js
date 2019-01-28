@@ -1,7 +1,7 @@
 module.exports = function (RED) {
     const nforce = require('./nforce_wrapper');
 
-    function Query(config) {
+    function SoqlQuery(config) {
         const node = this;
         RED.nodes.createNode(node, config);
         this.connection = RED.nodes.getNode(config.connection);
@@ -12,44 +12,34 @@ module.exports = function (RED) {
 
             // use msg query if node's query is blank
             // TODO: should the msg.query ALWAYS overwrite the config query of existent?
-            var query = '';
-            if (msg.hasOwnProperty('query') && config.query === '') {
-                query = msg.query;
-            } else {
-                query = config.query;
-            }
+            const query = (msg.hasOwnProperty('query') && config.query === '')
+                ? msg.query
+                : config.query;
+            const payload = { fetchAll: config.fetchAll, query: query };
 
             // create connection object
             const orgResult = nforce.createConnection(this.connection);
-
+            const org = orgResult.org;
             // auth and run query
             nforce
-                .authenticate(orgResult.org, orgResult.config)
-                .then(function () {
-                    return org.query({ fetchAll: config.fetchAll, query: query }).catch(function (err) {
-                        node.status({ fill: 'red', shape: 'dot', text: 'Error:' + e.message });
-                        node.error(err, msg);
-                    });
-                })
-                .then(function (results) {
-                    if (config.returnJSON) {
-                        msg.payload = results.records.map(function (record) {
-                            return record.toJSON();
+                .authenticate(org, orgResult.config)
+                .then(oath => {
+                    return org.query(payload)
+                        .catch(err => {
+                            node.status({ fill: 'red', shape: 'dot', text: 'Error:' + e.message });
+                            node.error(err, msg);
                         });
-                    } else {
-                        msg.payload = {
-                            size: results.totalSize,
-                            records: results.records
-                        };
-                    }
+                })
+                .then(results => {
+                    msg.payload = results.records.map(r => r.toJSON());
                     node.send(msg);
                     node.status({});
                 })
-                .catch(function (err) {
+                .catch(err => {
                     node.status({ fill: 'red', shape: 'dot', text: 'Error:' + e.message });
                     node.error(err, msg);
                 });
         });
     }
-    RED.nodes.registerType('soql', Query);
+    RED.nodes.registerType('soql', SoqlQuery);
 };

@@ -1,11 +1,11 @@
 module.exports = function (RED) {
 
-    var nforce = require('./nforce8_wrapper');
+    const nforce = require('./nforce8_wrapper');
 
     function Dml(config) {
         RED.nodes.createNode(this, config);
         this.connection = RED.nodes.getNode(config.connection);
-        var node = this;
+        const node = this;
         this.on('input', msg => {
 
             // show initial status of progress
