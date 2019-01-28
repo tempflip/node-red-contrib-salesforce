@@ -61,8 +61,14 @@ const getConfig = function (configOptions, msg) {
     return connectionOptionResult;
 }
 
+const redError = function (redNode, msg, err) {
+    redNode.status({ fill: 'red', shape: 'dot', text: 'Error:' + err.message });
+    redNode.error(err, msg);
+}
+
 module.exports = {
     createConnection: createConnection,
     authenticate: authenticate,
-    force: nforce8
+    force: nforce8,
+    error: redError
 }

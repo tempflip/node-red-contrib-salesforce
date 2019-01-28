@@ -25,20 +25,14 @@ module.exports = function (RED) {
                 .authenticate(org, orgResult.config)
                 .then(oath => {
                     return org.query(payload)
-                        .catch(err => {
-                            node.status({ fill: 'red', shape: 'dot', text: 'Error:' + e.message });
-                            node.error(err, msg);
-                        });
+                        .catch(err => nforce.error(node, msg, err));
                 })
                 .then(results => {
                     msg.payload = results.records.map(r => r.toJSON());
                     node.send(msg);
                     node.status({});
                 })
-                .catch(err => {
-                    node.status({ fill: 'red', shape: 'dot', text: 'Error:' + e.message });
-                    node.error(err, msg);
-                });
+                .catch(err => nforce.error(node, msg, err));
         });
     }
     RED.nodes.registerType('soql', SoqlQuery);

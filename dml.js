@@ -44,8 +44,7 @@ module.exports = function (RED) {
                             break;
                         default:
                             const err = new Error('Unknown method:' + theAction);
-                            node.status({ fill: 'red', shape: 'dot', text: 'Unknown method:' + theAction });
-                            node.error(err, msg);
+                            nforce.error(node, msg, err);
                     }
 
                     return dmlResult;
@@ -62,10 +61,7 @@ module.exports = function (RED) {
                     node.send(msg);
                     node.status({});
                 })
-                .catch(function (err) {
-                    node.status({ fill: 'red', shape: 'dot', text: 'Error:' + e.message });
-                    node.error(err, msg);
-                });
+                .catch(err => nforce.error(node, msg, err));
         });
     }
     RED.nodes.registerType("dml", Dml);
