@@ -1,24 +1,22 @@
-module.exports = function(RED) {
+module.exports = function (RED) {
     var parser = require('xml2js').parseString;
-    var _ = require('lodash');
 
     function ParseObm(config) {
         RED.nodes.createNode(this, config);
-        var node = this;
-        this.on('input', function(msg) {
-            parser(msg.payload, function(err, result) {
+        const node = this;
+        this.on('input', msg => {
+            parser(msg.payload, (err, result) => {
                 if (err) {
                     node.error(err, msg);
                     node.status({ fill: 'red', shape: 'dot', text: 'Error parsing XML.' });
-                }
-                // TODO: debulkify incoming messages ??
-                if (!err) {
+                } else {
+                    // TODO: debulkify incoming messages ??
                     const returnMsg = Object.assign({}, msg);
                     const httpMsg = Object.assign({}, msg);
                     try {
                         // get rid of the stuff we don't need
-                        var root = result['soapenv:Envelope']['soapenv:Body'][0].notifications[0];
-                        var data = root.Notification[0].sObject[0];
+                        const root = result['soapenv:Envelope']['soapenv:Body'][0].notifications[0];
+                        const data = root.Notification[0].sObject[0];
                         // start building payload
                         returnMsg.payload = {
                             organizationId: root.OrganizationId[0],
@@ -27,15 +25,15 @@ module.exports = function(RED) {
                             sobject: {}
                         };
                         // check for a sessionId
-                        if (_.isArray(root.SessionId)) {
+                        if (Array.isArray(root.SessionId)) {
                             returnMsg.payload.sessionId = root.SessionId[0];
                         }
                         // look at each node and see if it contains an array with data
-                        _.forEach(data, function(val, key) {
-                            if (_.isArray(val)) {
+                        for (let [key, val] of Object.entries(data)) {
+                            if (Array.isArray(val)) {
                                 returnMsg.payload.sobject[key.split(':')[1].toLowerCase()] = val[0];
                             }
-                        });
+                        };
                         // Prepare the return message for http
                         if (httpMsg.headers) {
                             httpMsg.headers['Content-Type'] = 'application/xml';
