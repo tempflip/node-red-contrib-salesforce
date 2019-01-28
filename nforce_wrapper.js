@@ -63,5 +63,6 @@ const getConfig = function (configOptions, msg) {
 
 module.exports = {
     createConnection: createConnection,
-    authenticate: authenticate
+    authenticate: authenticate,
+    force: nforce8
 }

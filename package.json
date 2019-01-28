@@ -1,6 +1,6 @@
 {
     "name": "node-red-contrib-salesforce",
-    "version": "0.5.1",
+    "version": "0.6.0-alpha",
     "description": "A set of Node-RED nodes to interact with Salesforce and Force.com.",
     "author": {
         "name": "Jeff Douglas",
@@ -32,6 +32,7 @@
             "soql": "soql.js",
             "sosl": "sosl.js",
             "dml": "dml.js",
+            "chatter": "chatter.js",
             "streaming": "streaming.js",
             "obm": "obm.js",
             "connection-config": "connection-config.js"
@@ -41,7 +42,7 @@
     "dependencies": {
         "faye": "^1.2.4",
         "lodash": "^4.17.11",
-        "nforce8": "^2.0.4-alpha",
+        "nforce8": "^2.0.6",
         "xml2js": "^0.4.19"
     },
     "scripts": {
