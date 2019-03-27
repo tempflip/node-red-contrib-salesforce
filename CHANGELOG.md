@@ -1,14 +1,19 @@
 # Changelog
 
+## 0.6.1
+
+- Switched to nforce8
+- tested on NodeRED 0.20.0
+
 ## 0.2.3
 
-- Added "returnJSON" to SOQL node to address: 
+- Added "returnJSON" to SOQL node to address:
   - Node-Red Debug window showing misleading information #5
   - bug in how soql queries return in node-red #19
 
-## 0.2.2 
+## 0.2.2
 
-- Fix query variable scope on soql and sosl nodes (#14) 
+- Fix query variable scope on soql and sosl nodes (#14)
 
 ## 0.2.1
 

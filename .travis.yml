@@ -6,7 +6,8 @@ install:
 cache:
   directories:
     - '$HOME/.npm'
-after_failure: cat /home/travis/.npm/_logs/*.log
+after_failure:
+  - cat /home/travis/.npm/_logs/*.log
 deploy:
   provider: npm
   email: stw@linux.com

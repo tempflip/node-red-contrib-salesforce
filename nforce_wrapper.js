@@ -1,35 +1,91 @@
-const nforce = require('nforce');
+const nforce8 = require('nforce8');
+
+const createConnection = function(configOptionsRaw, msg) {
+  // Update configOptions from msg if there's incoming credentials
+  const configOptions = getConfig(configOptionsRaw, msg);
+  msg = msg || {};
+  const orgOptions = {
+    /* TODO: remove single option to facilitate alternative logins */
+    mode: 'single',
+    redirectUri: configOptions.callbackUrl,
+    environment: configOptions.environment
+  };
+
+  // Overwrite the endpoints eventually - access instance directly
+  if (configOptions.usePotUrl) {
+    orgOptions.authEndpoint = configOptions.poturl;
+    orgOptions.testAuthEndpoint = configOptions.poturl;
+  }
+
+  if (configOptions.apiversion) {
+    orgOptions.apiVersion = configOptions.apiversion;
+  }
+
+  const connectionResult = nforce8.createConnection(orgOptions);
+  const result = {
+    connection: connectionResult,
+    config: configOptions
+  };
+
+  return result;
+};
+
+// wrapper around the org.authenticate function
+// TODO: Token authentication for Salesforce roundtrip
+const authenticate = function(org, configOptions) {
+  // TODO: Check if we have a incomign session
+  return org.authenticate(configOptions);
+};
+
+/**
+ * Define
+ * @param {*} configOptions the current configuration settings
+ * @param {*} msg the actual incoming message that might contain identity information
+ */
+const getConfig = function(configOptions, msg) {
+  configOptions = configOptions || {};
+  const connectionOptionResult = Object.assign({}, configOptions);
+  //  Check if  credentials from message overwrite credentials from config
+  if (configOptions.allowMsgCredentials && msg.hasOwnProperty('sf')) {
+    //TODO: Do we really need to check for empty configuration values
+    // or is it OK to overwrite when sf values are present?
+    if (msg.sf.consumerKey && this.connection.consumerKey === '') {
+      connectionOptionResult.consumerKey = msg.sf.consumerKey;
+    }
+    if (msg.sf.consumerSecret && this.connection.consumerSecret === '') {
+      connectionOptionResult.consumerSecret = msg.sf.consumerSecret;
+    }
+    if (msg.sf.username && this.connection.username === '') {
+      connectionOptionResult.username = msg.sf.username;
+    }
+    if (msg.sf.password && this.connection.password === '') {
+      connectionOptionResult.password = msg.sf.password;
+    }
+  }
+
+  return connectionOptionResult;
+};
+
+const redError = function(redNode, msg, err) {
+  redNode.status({ fill: 'red', shape: 'dot', text: 'Error:' + err.message });
+  redNode.error(err, msg);
+};
+
+/**
+ * Checks for Salesforce headers in msg object to send back to SF
+ * @param {*} payload - the data to be posted
+ * @param {*} msg - the incoming message
+ */
+const extractHeaders = function(payload, msg) {
+  if (payload && msg && msg.sf && msg.sf.headers) {
+    payload.headers = msg.sf.headers;
+  }
+};
 
 module.exports = {
-    createConnection: function(configOptions, msg) {
-        msg = msg || {};
-        const orgOptions = {
-            mode: 'single',
-            redirectUri: configOptions.callbackUrl,
-            environment: configOptions.environment
-        };
-
-        // Overwrite credentials from msg
-        const useMsgCred = configOptions.allowMsgCredentials && msg.hasOwnProperty('sf');
-        orgOptions.clientId = (useMsgCred && msg.sf.consumerKey) ? msg.sf.consumerKey : configOptions.consumerKey;
-        orgOptions.clientSecret = (useMsgCred && msg.sf.consumerSecret) ? msg.sf.consumerSecret : configOptions.consumerSecret;
-
-        // Overwrite the endpoints eventually - access instance directly
-        if (configOptions.usePotUrl) {
-            orgOptions.authEndpoint = configOptions.poturl;
-            orgOptions.testAuthEndpoint = configOptions.poturl;
-        }
-
-        return nforce.createConnection(orgOptions);
-    },
-
-    // wrapper around the org.authenticate function
-    authenticate: function(org, configOptions, msg, callback) {
-        const useMsgCred = configOptions.allowMsgCredentials && msg.hasOwnProperty('sf');
-        const authOptions = {};
-        authOptions.username = (useMsgCred && msg.sf.username) ? msg.sf.username : configOptions.username;
-        authOptions.password = (useMsgCred && msg.sf.password) ? msg.sf.password : configOptions.password;
-
-        org.authenticate(authOptions, callback);
-    }
+  createConnection: createConnection,
+  authenticate: authenticate,
+  force: nforce8,
+  error: redError,
+  extractHeaders: extractHeaders
 };
