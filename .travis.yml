@@ -1,11 +1,13 @@
 language: node_js
 node_js:
-  - '8'
+  - 'node'
+  - 'lts/*'
 install:
   - npm install
 cache:
   directories:
     - '$HOME/.npm'
+    - 'node_modules'
 after_failure:
   - cat /home/travis/.npm/_logs/*.log
 deploy:
