@@ -27,6 +27,9 @@ const createConnection = function(configOptionsRaw, msg) {
     connection: connectionResult,
     config: configOptions
   };
+  //console.log( 'Connection: ' + JSON.stringify(result.connection,null,2) );
+  //console.log( 'Config: ' + JSON.stringify(result.config,null,2) );
+
 
   return result;
 };
