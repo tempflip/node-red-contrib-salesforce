@@ -20,8 +20,9 @@ const createConnection = function(configOptionsRaw, msg) {
   if (configOptions.apiversion) {
     orgOptions.apiVersion = configOptions.apiversion;
   }
-
+  orgOptions.clientId = configOptions.consumerKey;
   const connectionResult = nforce8.createConnection(orgOptions);
+  connectionResult.clientSecret = configOptions.consumerSecret;
   const result = {
     connection: connectionResult,
     config: configOptions
@@ -34,6 +35,7 @@ const createConnection = function(configOptionsRaw, msg) {
 // TODO: Token authentication for Salesforce roundtrip
 const authenticate = function(org, configOptions) {
   // TODO: Check if we have a incomign session
+  //console.log( 'Org: ' + org );
   return org.authenticate(configOptions);
 };
 
@@ -43,6 +45,8 @@ const authenticate = function(org, configOptions) {
  * @param {*} msg the actual incoming message that might contain identity information
  */
 const getConfig = function(configOptions, msg) {
+  //console.log( 'ConfigOptions: ' + JSON.stringify(configOptions) );
+  //console.log( 'Msg: ' + msg );
   configOptions = configOptions || {};
   const connectionOptionResult = Object.assign({}, configOptions);
   //  Check if  credentials from message overwrite credentials from config
@@ -63,6 +67,8 @@ const getConfig = function(configOptions, msg) {
     }
   }
 
+  //console.log('consumerKey: ' + connectionOptionResult.consumerKey);
+  //console.log('consumerSecret: ' + connectionOptionResult.consumerSecret);
   return connectionOptionResult;
 };
 
