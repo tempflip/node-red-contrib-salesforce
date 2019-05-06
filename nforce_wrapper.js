@@ -44,7 +44,7 @@ const authenticate = function(org, configOptions) {
  * @param {*} configOptions the current configuration settings
  * @param {*} msg the actual incoming message that might contain identity information
  */
-const getConfig = function(configOptions, msg) {
+const getConfig = (configOptions, msg) => {
   //console.log( 'ConfigOptions: ' + JSON.stringify(configOptions) );
   //console.log( 'Msg: ' + msg );
   configOptions = configOptions || {};
@@ -72,7 +72,7 @@ const getConfig = function(configOptions, msg) {
   return connectionOptionResult;
 };
 
-const redError = function(redNode, msg, err) {
+const redError = (redNode, msg, err) => {
   redNode.status({ fill: 'red', shape: 'dot', text: 'Error:' + err.message });
   redNode.error(err, msg);
 };
@@ -82,7 +82,7 @@ const redError = function(redNode, msg, err) {
  * @param {*} payload - the data to be posted
  * @param {*} msg - the incoming message
  */
-const extractHeaders = function(payload, msg) {
+const extractHeaders = (payload, msg) => {
   if (payload && msg && msg.sf && msg.sf.headers) {
     payload.headers = msg.sf.headers;
   }

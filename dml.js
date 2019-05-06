@@ -22,6 +22,7 @@ module.exports = function(RED) {
       // Auth and run DML
       nforce
         .authenticate(orgResult.org, orgResult.config)
+        // eslint-disable-next-line no-unused-vars
         .then((oauth) => {
           let dmlResult;
           const org = orgResult.org;
@@ -42,6 +43,7 @@ module.exports = function(RED) {
               dmlResult = org.delete(payload);
               break;
             default:
+              // eslint-disable-next-line no-case-declarations
               const err = new Error('Unknown method:' + theAction);
               nforce.error(node, msg, err);
           }
