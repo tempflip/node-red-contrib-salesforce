@@ -1,6 +1,6 @@
 {
   "name": "node-red-contrib-salesforce",
-  "version": "0.6.0-alpha",
+  "version": "0.6.2-alpha",
   "description": "A set of Node-RED nodes to interact with Salesforce and Force.com.",
   "author": {
     "name": "Jeff Douglas",

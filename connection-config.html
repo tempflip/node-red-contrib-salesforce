@@ -35,11 +35,11 @@
       allowMsgCredentials: {
         value: false
       },
-      username: {
+      userName: {
         value: '',
         required: false
       },
-      password: {
+      passWord: {
         value: '',
         required: false
       },
@@ -82,8 +82,8 @@
     // reset the form label size
     oneditsave: function() {
       if (this.useEnvCredentials) {
-        delete this.username;
-        delete this.password;
+        delete this.userName;
+        delete this.passWord;
         delete this.consumerKey;
         delete this.consumerSecret;
       }
@@ -156,12 +156,12 @@
           <input type="password" id="node-config-input-consumerSecret" />
       </div>
       <div class="form-row credentials">
-          <label for="node-config-input-username"><i class="fa fa-user"></i> Username</label>
-          <input type="text" id="node-config-input-username" />
+          <label for="node-config-input-userName"><i class="fa fa-user"></i> Username</label>
+          <input type="text" id="node-config-input-userName" />
       </div>
       <div class="form-row credentials">
-          <label for="node-config-input-password"><i class="fa fa-lock"></i> Password</label>
-          <input type="password" id="node-config-input-password" />
+          <label for="node-config-input-passWord"><i class="fa fa-lock"></i> Password</label>
+          <input type="password" id="node-config-input-passWord" />
       </div>
   </div>
 </script>
