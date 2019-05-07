@@ -58,18 +58,19 @@ const getEnvironment = (config) => {
 
 module.exports = (RED) => {
   function ConnectionConfig(config) {
+    this.apiversion = config.apiversion || API_VERSION;
+    const envResult = getEnvironment(config);
     // Configuration settings, eventually from environment
+    this.allowMsgCredentials = config.allowMsgCredentials;
+    this.callbackUrl = getConfigValue(config, 'callbackUrl');
     this.consumerKey = getConfigValue(config, 'consumerKey');
     this.consumerSecret = getConfigValue(config, 'consumerSecret');
-    this.callbackUrl = getConfigValue(config, 'callbackUrl');
-    this.apiversion = config.apiversion || API_VERSION;
-    this.allowMsgCredentials = config.allowMsgCredentials;
-    this.userName = getConfigValue(config, 'userName');
+    this.credentialType = getConfigValue(config, 'credentialType');
+    this.environment = envResult.environment;
     this.passWord = getConfigValue(config, 'passWord');
     this.poturl = getConfigValue(config, 'poturl');
-    const envResult = getEnvironment(config);
-    this.environment = envResult.environment;
     this.usePotUrl = envResult.usePotUrl;
+    this.userName = getConfigValue(config, 'userName');
     // Register the Node
     RED.nodes.createNode(this, config);
   }
