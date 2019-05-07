@@ -1,57 +1,54 @@
-module.exports = function (RED) {
+module.exports = function(RED) {
+  const nforce = require('./nforce_wrapper');
 
-    const nforce = require('./nforce_wrapper');
+  function Chatter(config) {
+    const node = this;
+    RED.nodes.createNode(this, config);
+    this.connection = RED.nodes.getNode(config.connection);
 
-    function Chatter(config) {
-        const node = this;
-        RED.nodes.createNode(this, config);
-        this.connection = RED.nodes.getNode(config.connection);
+    this.on('input', (msg) => {
+      // show initial status of progress
+      node.status({ fill: 'green', shape: 'ring', text: 'connecting....' });
 
-        this.on('input', msg => {
+      const payload = nforce.force.createSObject('FeedItem');
+      payload.Body = msg.payload;
 
-            // show initial status of progress
-            node.status({ fill: "green", shape: "ring", text: "connecting...." });
+      // Additional fields for addressing the chatter post properly
+      if (msg.ParentId) {
+        payload.ParentId = msg.ParentId;
+      }
 
-            const payload = nforce.force.createSObject('FeedItem');
-            payload.Body = msg.payload
+      if (msg.RelatedRecordId) {
+        payload.RelatedRecordId = msg.RelatedRecordId;
+      }
 
-            // Additional fields for addressing the chatter post properly
-            if (msg.ParentId) {
-                payload.ParentId = msg.ParentId;
-            }
+      if (msg.Title) {
+        payload.Title = msg.Title;
+      }
 
-            if (msg.RelatedRecordId) {
-                payload.RelatedRecordId = msg.RelatedRecordId;
-            }
+      // create connection object
+      const orgResult = nforce.createConnection(this.connection);
 
-            if (msg.Title) {
-                payload.Title = msg.Title;
-            }
-
-            // create connection object
-            const orgResult = nforce.createConnection(this.connection);
-
-            // auth and insert Feed Item
-            nforce
-                .authenticate(orgResult.org, orgResult.config)
-                .then(result => {
-                    const sobj = { sobject: payload };
-                    return orgResult.org.insert(sobj)
-                        .catch(err => {
-                            node.status({ fill: 'red', shape: 'dot', text: 'Error:' + e.message });
-                            node.error(err, msg);
-                        });
-                })
-                .then(results => {
-                    msg.payload = results.records.map(record => record.toJSON());
-                    node.send(msg);
-                    node.status({});
-                })
-                .catch(function (err) {
-                    node.status({ fill: 'red', shape: 'dot', text: 'Error:' + e.message });
-                    node.error(err, msg);
-                });
+      // auth and insert Feed Item
+      nforce
+        .authenticate(orgResult.org, orgResult.config)
+        .then((result) => {
+          const sobj = { sobject: payload };
+          return orgResult.org.insert(sobj).catch((err) => {
+            node.status({ fill: 'red', shape: 'dot', text: 'Error:' + err.message });
+            node.error(err, msg);
+          });
+        })
+        .then((results) => {
+          msg.payload = results.records.map((record) => record.toJSON());
+          node.send(msg);
+          node.status({});
+        })
+        .catch(function(err) {
+          node.status({ fill: 'red', shape: 'dot', text: 'Error:' + err.message });
+          node.error(err, msg);
         });
-    }
-    RED.nodes.registerType("chatter", Chatter);
+    });
+  }
+  RED.nodes.registerType('chatter', Chatter);
 };
