@@ -1,15 +1,4 @@
 const nforce = require('./nforce_wrapper');
-const oAuthMap = {}; // Capture oauth info for reuse
-
-const getOAuth = (orgConfig) => {
-  const curUser = orgConfig.userName;
-  return oAuthMap[curUser];
-};
-
-const setOAuth = (oauth, orgConfig) => {
-  const curUser = orgConfig.userName;
-  oAuthMap[curUser] = oauth;
-};
 
 const handleInput = (node, msg) => {
   const config = node.config;
@@ -24,9 +13,9 @@ const handleInput = (node, msg) => {
   const orgConfig = orgResult.config;
   // auth and run query
   nforce
-    .authenticate(org, orgConfig, getOAuth(orgConfig))
+    .authenticate(org, orgConfig, nforce.getOAuth(orgConfig))
     .then((oauth) => {
-      setOAuth(oauth, orgConfig);
+      nforce.setOAuth(oauth, orgConfig);
       // use msg query if provided
       const payload = {
         fetchAll: config.fetchAll,

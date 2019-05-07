@@ -3,6 +3,18 @@ const nforce8 = require('nforce8');
 //const API_VERSION = nforce8.API_VERSION;
 const API_VERSION = 'v45.0';
 
+const oAuthMap = {}; // Capture oauth info for reuse
+
+const getOAuth = (orgConfig) => {
+  const curUser = orgConfig.userName;
+  return oAuthMap[curUser];
+};
+
+const setOAuth = (oauth, orgConfig) => {
+  const curUser = orgConfig.userName;
+  oAuthMap[curUser] = oauth;
+};
+
 /**
  *
  * @param {configOptions} configOptionsRaw from setup node
@@ -121,6 +133,8 @@ module.exports = {
   force: nforce8,
   error: redError,
   connect: redConnect,
+  getOAuth: getOAuth,
+  setOAuth: setOAuth,
   extractHeaders: extractHeaders,
   API_VERSION: API_VERSION
 };

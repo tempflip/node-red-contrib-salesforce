@@ -1,36 +1,46 @@
+const nforce = require('./nforce_wrapper');
+
+const handleInput = (node, msg) => {
+  const config = node.config;
+  const connection = node.connection;
+
+  // show initial status of progress
+  nforce.connect(node, 'connecting...');
+
+  // create connection object
+  const orgResult = nforce.createConnection(connection, msg);
+  const org = orgResult.org;
+  const orgConfig = orgResult.config;
+  // auth and run query
+  nforce
+    .authenticate(org, orgConfig, nforce.getOAuth(orgConfig))
+    .then((oauth) => {
+      nforce.setOAuth(oauth, orgConfig);
+      // use msg query if provided
+      const payload = {
+        fetchAll: config.fetchAll,
+        search: msg.query || config.query,
+        oauth: oauth
+      };
+
+      return org.query(payload).catch((err) => nforce.error(node, msg, err));
+    })
+    .then((results) => {
+      msg.payload = results.records.map((r) => r.toJSON());
+      node.send(msg);
+      node.status({});
+    })
+    .catch((err) => nforce.error(node, msg, err));
+};
+
+/* Make code available */
 module.exports = function(RED) {
-  const nforce = require('./nforce_wrapper');
-
   function SoslQuery(config) {
-    RED.nodes.createNode(this, config);
-    this.connection = RED.nodes.getNode(config.connection);
     const node = this;
-    this.on('input', function(msg) {
-      // show initial status of progress
-      node.status({ fill: 'green', shape: 'ring', text: 'connecting....' });
-
-      // use msg query if node's query is blank
-      const query = msg.hasOwnProperty('query') && config.query === '' ? msg.query : config.query;
-      const payload = { search: query };
-
-      // create connection object
-      const orgResult = nforce.createConnection(this.connection);
-      const org = orgResult.org;
-
-      // auth and run query
-      nforce
-        .authenticate(org, orgResult.config)
-        // eslint-disable-next-line no-unused-vars
-        .then((oauth) => {
-          return org.search(payload);
-        })
-        .then((results) => {
-          msg.payload = results.map((r) => r.toJSON());
-          node.send(msg);
-          node.status({});
-        })
-        .catch((err) => nforce.error(node, msg, err));
-    });
+    node.connection = RED.nodes.getNode(config.connection);
+    node.config = config;
+    this.on('input', (msg) => handleInput(node, msg));
+    RED.nodes.createNode(node, config);
   }
   RED.nodes.registerType('sosl', SoslQuery);
 };
