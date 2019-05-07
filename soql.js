@@ -1,37 +1,57 @@
-module.exports = function(RED) {
-  const nforce = require('./nforce_wrapper');
+const nforce = require('./nforce_wrapper');
+const oAuthMap = {}; // Capture oauth info for reuse
 
+const getOAuth = (orgConfig) => {
+  const curUser = orgConfig.userName;
+  return oAuthMap[curUser];
+};
+
+const setOAuth = (oauth, orgConfig) => {
+  const curUser = orgConfig.userName;
+  oAuthMap[curUser] = oauth;
+};
+
+const handleInput = (node, msg) => {
+  const config = node.config;
+  const connection = node.connection;
+
+  // show initial status of progress
+  nforce.connect(node, 'connecting...');
+
+  // create connection object
+  const orgResult = nforce.createConnection(connection, msg);
+  const org = orgResult.org;
+  const orgConfig = orgResult.config;
+  // auth and run query
+  nforce
+    .authenticate(org, orgConfig, getOAuth(orgConfig))
+    .then((oauth) => {
+      setOAuth(oauth, orgConfig);
+      // use msg query if provided
+      const payload = {
+        fetchAll: config.fetchAll,
+        query: msg.query || config.query,
+        oauth: oauth
+      };
+
+      return org.query(payload).catch((err) => nforce.error(node, msg, err));
+    })
+    .then((results) => {
+      msg.payload = results.records.map((r) => r.toJSON());
+      node.send(msg);
+      node.status({});
+    })
+    .catch((err) => nforce.error(node, msg, err));
+};
+
+/* Make code available */
+module.exports = function(RED) {
   function SoqlQuery(config) {
     const node = this;
+    node.connection = RED.nodes.getNode(config.connection);
+    node.config = config;
+    this.on('input', (msg) => handleInput(node, msg));
     RED.nodes.createNode(node, config);
-    this.connection = RED.nodes.getNode(config.connection);
-
-    this.on('input', function(msg) {
-      // show initial status of progress
-      node.status({ fill: 'green', shape: 'ring', text: 'connecting....' });
-
-      // use msg query if node's query is blank
-      // TODO: should the msg.query ALWAYS overwrite the config query of existent?
-      const query = msg.hasOwnProperty('query') && config.query === '' ? msg.query : config.query;
-      const payload = { fetchAll: config.fetchAll, query: query };
-
-      // create connection object
-      const orgResult = nforce.createConnection(this.connection);
-      const org = orgResult.org;
-      // auth and run query
-      nforce
-        .authenticate(org, orgResult.config)
-        // eslint-disable-next-line no-unused-vars
-        .then((oauth) => {
-          return org.query(payload).catch((err) => nforce.error(node, msg, err));
-        })
-        .then((results) => {
-          msg.payload = results.records.map((r) => r.toJSON());
-          node.send(msg);
-          node.status({});
-        })
-        .catch((err) => nforce.error(node, msg, err));
-    });
   }
   RED.nodes.registerType('soql', SoqlQuery);
 };

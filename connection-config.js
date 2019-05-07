@@ -3,7 +3,7 @@
  * Salesforce related settings including
  * the ability to read data from the environment
  */
-const API_VERSION = 'v45.0';
+const API_VERSION = require('./nforce_wrapper').API_VERSION;
 
 /**
  * Returns a configured value based on a key and

@@ -1,14 +1,27 @@
 const nforce8 = require('nforce8');
+// Uncomment when nforce8 2.0.8 is available
+//const API_VERSION = nforce8.API_VERSION;
+const API_VERSION = 'v45.0';
 
-const createConnection = function(configOptionsRaw, msg) {
+/**
+ *
+ * @param {configOptions} configOptionsRaw from setup node
+ * @param {msg} msg incoming message that might have overwrites
+ * @returns {org} SFDC Org to be able to authenticate
+ *
+ */
+const prepareConnection = (configOptionsRaw, msg) => {
   // Update configOptions from msg if there's incoming credentials
-  const configOptions = getConfig(configOptionsRaw, msg);
-  msg = msg || {};
+  const configOptions = mergeConfigOptionsWithMsg(configOptionsRaw, msg);
+
+  // Now build the options we use to create the SFDC connection
   const orgOptions = {
-    /* TODO: remove single option to facilitate alternative logins */
-    mode: 'single',
-    redirectUri: configOptions.callbackUrl,
-    environment: configOptions.environment
+    apiVersion: configOptions.apiversion || API_VERSION,
+    clientId: configOptions.consumerKey,
+    clientSecret: configOptions.consumerSecret,
+    environment: configOptions.environment,
+    mode: 'multi',
+    redirectUri: configOptions.callbackUrl
   };
 
   // Overwrite the endpoints eventually - access instance directly
@@ -17,64 +30,78 @@ const createConnection = function(configOptionsRaw, msg) {
     orgOptions.testAuthEndpoint = configOptions.poturl;
   }
 
-  if (configOptions.apiversion) {
-    orgOptions.apiVersion = configOptions.apiversion;
-  }
-  orgOptions.clientId = configOptions.consumerKey;
-  const connectionResult = nforce8.createConnection(orgOptions);
-  connectionResult.clientSecret = configOptions.consumerSecret;
+  // Callout to SFDC, getting org object back
+  const sfdcOrg = nforce8.createConnection(orgOptions);
+
   const result = {
-    connection: connectionResult,
+    org: sfdcOrg,
     config: configOptions
   };
 
   return result;
 };
 
-// wrapper around the org.authenticate function
-// TODO: Token authentication for Salesforce roundtrip
-const authenticate = function(org, configOptions) {
-  // TODO: Check if we have a incomign session
-  //console.log( 'Org: ' + org );
-  return org.authenticate(configOptions);
+/**
+ * wrapper around the org.authenticate function
+ * @param {org} org  SFDC Org ready to authenticat
+ * @param {configOptions} configOptions from config and msg
+ */
+const authenticate = (org, configOptions, oAuthCandidate) => {
+  // Don't reauthenticate if we are still good
+  if (oAuthCandidate && isValidOAuth(oAuthCandidate)) {
+    return Promise.resolve(oAuthCandidate);
+  }
+
+  const authOptions = {
+    username: configOptions.userName,
+    password: configOptions.passWord
+  };
+
+  // Returns a promise
+  return org.authenticate(authOptions);
+};
+
+// eslint-disable-next-line no-unused-vars
+const isValidOAuth = (candidate) => {
+  // TODO: How to check OAuth
+  return false;
 };
 
 /**
- * Define
- * @param {*} configOptions the current configuration settings
- * @param {*} msg the actual incoming message that might contain identity information
+ * Define config options from msg object
+ * @param {configOptions} configOptions the current configuration settings
+ * @param {msg} msg the actual incoming message that might contain identity information
+ * @returns {configOptions} config options merged with what was found in the msg object
  */
-const getConfig = (configOptions, msg) => {
-  //console.log( 'ConfigOptions: ' + JSON.stringify(configOptions) );
-  //console.log( 'Msg: ' + msg );
-  configOptions = configOptions || {};
-  const connectionOptionResult = Object.assign({}, configOptions);
-  //  Check if  credentials from message overwrite credentials from config
-  if (configOptions.allowMsgCredentials && msg.hasOwnProperty('sf')) {
-    //TODO: Do we really need to check for empty configuration values
-    // or is it OK to overwrite when sf values are present?
-    if (msg.sf.consumerKey && this.connection.consumerKey === '') {
-      connectionOptionResult.consumerKey = msg.sf.consumerKey;
-    }
-    if (msg.sf.consumerSecret && this.connection.consumerSecret === '') {
-      connectionOptionResult.consumerSecret = msg.sf.consumerSecret;
-    }
-    if (msg.sf.username && this.connection.username === '') {
-      connectionOptionResult.username = msg.sf.username;
-    }
-    if (msg.sf.password && this.connection.password === '') {
-      connectionOptionResult.password = msg.sf.password;
+const mergeConfigOptionsWithMsg = (configOptions, msg) => {
+  const connectionOptionResult = { ...configOptions };
+  //  Credentials from the msg object will always overwrite the stored
+  // properties if the configuration allows that. We copy ALL properties
+  // from the sf object
+  if (connectionOptionResult.allowMsgCredentials && msg && msg.sf) {
+    const sfProperties = msg.sf;
+    for (let prop in sfProperties) {
+      // We need to check for username/password separate
+      // since they are camelCase starting v0.7
+      if (prop.toLowerCase() === 'username') {
+        connectionOptionResult.userName = sfProperties[prop];
+      } else if (prop.toLowerCase() === 'password') {
+        connectionOptionResult.passWord = sfProperties[prop];
+      } else if (sfProperties.hasOwnProperty(prop)) {
+        connectionOptionResult[prop] = sfProperties[prop];
+      }
     }
   }
-
-  //console.log('consumerKey: ' + connectionOptionResult.consumerKey);
-  //console.log('consumerSecret: ' + connectionOptionResult.consumerSecret);
   return connectionOptionResult;
 };
 
 const redError = (redNode, msg, err) => {
   redNode.status({ fill: 'red', shape: 'dot', text: 'Error:' + err.message });
   redNode.error(err, msg);
+};
+
+const redConnect = (redNode, text) => {
+  redNode.status({ fill: 'green', shape: 'ring', text: text });
 };
 
 /**
@@ -89,9 +116,11 @@ const extractHeaders = (payload, msg) => {
 };
 
 module.exports = {
-  createConnection: createConnection,
+  createConnection: prepareConnection,
   authenticate: authenticate,
   force: nforce8,
   error: redError,
-  extractHeaders: extractHeaders
+  connect: redConnect,
+  extractHeaders: extractHeaders,
+  API_VERSION: API_VERSION
 };
