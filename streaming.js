@@ -25,8 +25,6 @@ const setupSubscriptionNode = (node, config) => {
       clients[node.id] = node;
     }
   }
-
-  actionHelper.idle(node);
 };
 
 const handleStreamError = (node, err) => {
@@ -53,67 +51,83 @@ const handleStreamData = (node, data) => {
   actionHelper.subscribed(node, node.subscriptionMessage);
 };
 
-const createSubscription = (node, org, msg, resolve, reject) => {
+const createSubscription = (subscribeOptions) => {
+  const node = subscribeOptions.node;
   if (node.subscriptionActive) {
     if (node.config.resubScribeOnDoubeSubscription) {
       // Terminate subscription first, ignore the resolve/reject
       terminateSubscription(node, () => {}, () => {});
     } else {
       // We don't subscribe again
-      resolve();
+      subscribeOptions.resolve();
       return;
     }
   }
   const config = node.config;
-  const subscriptionOpts = {
+  const msg = subscribeOptions.msg;
+  const streamOpts = {
     // Topic in message takes priority over configuration
     topic: msg.topic || config.pushTopic,
-    replayId: msg.replayId || node.startSubscriptionId
+    replayId: msg.replayId || node.startSubscriptionId,
+    oauth: subscribeOptions.oauth
   };
 
   try {
-    node.subscriptionMessage = 'Subscribed to:' + subscriptionOpts.topic;
-    node.client = org.createStreamClient();
-    const stream = node.client.subscribe(subscriptionOpts);
+    const org = subscribeOptions.org;
+    node.subscriptionMessage = 'Subscribed to:' + streamOpts.topic;
+    const fayeOptions = {
+      oauth: subscribeOptions.oauth
+      //timeout: 90,
+      //retry: 60
+    };
+    node.client = org.createStreamClient(fayeOptions);
+    const stream = node.client.subscribe(streamOpts);
     node.log(node.subscriptionMessage);
     node.subscriptionActive = true;
     stream.on('error', (err) => handleStreamError(node, err));
     stream.on('data', (data) => handleStreamData(node, data));
   } catch (ex) {
-    reject(ex);
+    subscribeOptions.reject(ex);
   }
 
   actionHelper.subscribed(node, node.subscriptionMessage);
-  resolve();
+  subscribeOptions.resolve();
 };
 
-const terminateSubscription = (node, resolve, reject) => {
-  // Terminate in any case
+const terminateSubscription = (subscribeOptions) => {
+  const node = subscribeOptions.node;
   if (node.subscriptionActive) {
-    node.subscriptionActive = false;
     try {
       if (node.client.disconnect) {
         node.client.disconnect();
-        node.status({ fill: 'gray', shape: 'ring', text: 'idle' });
-        resolve();
       }
     } catch (err) {
-      reject(err);
+      subscribeOptions.reject(err);
     }
-  } else {
-    // Nothing to do for an inactive connection
-    resolve();
   }
+  // Terminate in any case
+  node.subscriptionActive = false;
+  actionHelper.idle(node);
+  subscribeOptions.resolve();
 };
 
 const handleInput = (node, msg) => {
   const action = msg.action || (node.subscriptionActive ? 'unsubscribe' : 'subscribe');
-  const realAction = (org) => {
+  const realAction = (org, payload, nforce) => {
     return new Promise((resolve, reject) => {
+      const subscribeOptions = {
+        node,
+        org,
+        msg,
+        oauth: payload.oauth,
+        nforce,
+        resolve,
+        reject
+      };
       if (action === 'subscribe') {
-        createSubscription(node, org, msg, resolve, reject);
+        createSubscription(subscribeOptions);
       } else {
-        terminateSubscription(node, resolve, reject);
+        terminateSubscription(subscribeOptions);
       }
     });
   };
@@ -128,6 +142,7 @@ module.exports = function(RED) {
     setupSubscriptionNode(node, config);
     node.on('input', (msg) => handleInput(node, msg));
     RED.nodes.createNode(node, config);
+    actionHelper.idle(node);
   }
   RED.nodes.registerType('streaming', Streaming);
 };
