@@ -1,38 +1,40 @@
-module.exports = function (RED) {
-    const nforce = require('./nforce_wrapper');
+const actionHelper = require('./lib/action_helper');
 
-    function SoslQuery(config) {
-        RED.nodes.createNode(this, config);
-        this.connection = RED.nodes.getNode(config.connection);
-        const node = this;
-        this.on('input', function (msg) {
-            // show initial status of progress
-            node.status({ fill: 'green', shape: 'ring', text: 'connecting....' });
+/**
+ * Executes a SOSL query based on configuration and msg
+ *
+ * @param {node-red-node} node the current node
+ * @param {msg} msg the incoming message
+ */
+const handleInput = (node, msg) => {
+  const config = node.config;
+  const realAction = (org, payload) => {
+    return new Promise((resolve, reject) => {
+      Object.assign(payload, {
+        fetchAll: config.fetchAll,
+        search: msg.query || config.query
+      });
+      org
+        .query(payload)
+        .then((results) => {
+          const finalResults = results.records.map((r) => r.toJSON());
+          resolve(finalResults);
+        })
+        .catch((err) => reject(err));
+    });
+  };
 
-            // use msg query if node's query is blank
-            const query = (msg.hasOwnProperty('query') && config.query === '')
-                ? msg.query
-                : config.query;
-            const payload = { search: query };
+  actionHelper.inputToSFAction(node, msg, realAction);
+};
 
-            // create connection object
-            const orgResult = nforce.createConnection(this.connection);
-            const org = orgResult.connection;
-
-
-            // auth and run query
-            nforce
-                .authenticate(org, orgResult.config)
-                .then(oath => {
-                    return org.search(payload);
-                })
-                .then(results => {
-                    msg.payload = results.map(r => r.toJSON());
-                    node.send(msg);
-                    node.status({});
-                })
-                .catch(err => nforce.error(node, msg, err));
-        });
-    }
-    RED.nodes.registerType('sosl', SoslQuery);
+/* Make code available */
+module.exports = function(RED) {
+  function SoslQuery(config) {
+    const node = this;
+    node.connection = RED.nodes.getNode(config.connection);
+    node.config = config;
+    node.on('input', (msg) => handleInput(node, msg));
+    RED.nodes.createNode(node, config);
+  }
+  RED.nodes.registerType('sosl', SoslQuery);
 };

@@ -1,39 +1,42 @@
-module.exports = function (RED) {
-    const nforce = require('./nforce_wrapper');
+const actionHelper = require('./lib/action_helper');
 
-    function SoqlQuery(config) {
-        const node = this;
-        RED.nodes.createNode(node, config);
-        this.connection = RED.nodes.getNode(config.connection);
+/**
+ * Executes a SOQL query based on configuration and msg
+ *
+ * @param {node-red-node} node the current node
+ * @param {msg} msg the incoming message
+ */
+const handleInput = (node, msg) => {
+  const config = node.config;
 
-        this.on('input', function (msg) {
-            // show initial status of progress
-            node.status({ fill: 'green', shape: 'ring', text: 'connecting....' });
+  const realAction = (org, payload) => {
+    return new Promise((resolve, reject) => {
+      Object.assign(payload, {
+        fetchAll: config.fetchAll,
+        query: msg.query || config.query
+      });
 
-            // use msg query if node's query is blank
-            // TODO: should the msg.query ALWAYS overwrite the config query of existent?
-            const query = (msg.hasOwnProperty('query') && config.query === '')
-                ? msg.query
-                : config.query;
-            const payload = { fetchAll: config.fetchAll, query: query };
+      org
+        .query(payload)
+        .then((results) => {
+          const finalResults = results.records.map((r) => r.toJSON());
+          resolve(finalResults);
+        })
+        .catch((err) => reject(err));
+    });
+  };
 
-            // create connection object
-            const orgResult = nforce.createConnection(this.connection);
-            const org = orgResult.connection;
-            // auth and run query
-            nforce
-                .authenticate(org, orgResult.config)
-                .then(oath => {
-                    return org.query(payload)
-                        .catch(err => nforce.error(node, msg, err));
-                })
-                .then(results => {
-                    msg.payload = results.records.map(r => r.toJSON());
-                    node.send(msg);
-                    node.status({});
-                })
-                .catch(err => nforce.error(node, msg, err));
-        });
-    }
-    RED.nodes.registerType('soql', SoqlQuery);
+  actionHelper.inputToSFAction(node, msg, realAction);
+};
+
+/* Make code available */
+module.exports = function(RED) {
+  function SoqlQuery(config) {
+    const node = this;
+    node.connection = RED.nodes.getNode(config.connection);
+    node.config = config;
+    node.on('input', (msg) => handleInput(node, msg));
+    RED.nodes.createNode(node, config);
+  }
+  RED.nodes.registerType('soql', SoqlQuery);
 };

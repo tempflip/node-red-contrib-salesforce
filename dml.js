@@ -1,66 +1,72 @@
-module.exports = function(RED) {
-  const nforce = require('./nforce_wrapper');
+const actionHelper = require('./lib/action_helper');
 
-  function Dml(config) {
-    RED.nodes.createNode(this, config);
-    this.connection = RED.nodes.getNode(config.connection);
-    const node = this;
-    this.on('input', (msg) => {
-      // show initial status of progress
-      node.status({ fill: 'green', shape: 'ring', text: 'connecting....' });
-
+/**
+ * Executes a DML operation on a single object
+ *
+ * @param {node-red-node} node the current node
+ * @param {msg} msg the incoming message
+ */
+const handleInput = (node, msg) => {
+  const config = node.config;
+  const realAction = (org, payload, nforce) => {
+    return new Promise((resolve, reject) => {
       // check for overriding message properties
-      const theAction = msg.hasOwnProperty('action') && config.action === '' ? msg.action : config.action;
-      const theObject = msg.hasOwnPropety('object') && config.object === '' ? msg.object : config.object;
-
-      // create connection object
-      const orgResult = nforce.createConnection(this.connection);
+      // action and object overwrite the configured ones
+      const theAction = msg.action ? msg.action : config.action;
+      const theObject = msg.object ? msg.object : config.object;
       const sobj = nforce.force.createSObject(theObject, msg.payload);
-      const payload = { sobject: sobj };
+      Object.assign(payload, {
+        sobject: sobj
+      });
+      // Headers determine some of the behavior - we pass them on
       nforce.extractHeaders(payload, msg);
 
-      // Auth and run DML
-      nforce
-        .authenticate(orgResult.connection, orgResult.config)
-        .then((oauth) => {
-          let dmlResult;
-          const org = orgResult.org;
-          switch (theAction) {
-            case 'insert':
-              dmlResult = org.insert(payload);
-              break;
-            case 'update':
-              dmlResult = org.update(payload);
-              break;
-            case 'upsert':
-              if (msg.hasOwnProperty('externalId')) {
-                sobj.sobject.setExternalId(msg.externalId.field, msg.externalId.value);
-              }
-              dmlResult = org.upsert(payload);
-              break;
-            case 'delete':
-              dmlResult = org.delete(payload);
-              break;
-            default:
-              const err = new Error('Unknown method:' + theAction);
-              nforce.error(node, msg, err);
+      let dmlResult;
+      switch (theAction) {
+        case 'insert':
+          dmlResult = org.insert(payload);
+          break;
+        case 'update':
+          dmlResult = org.update(payload);
+          break;
+        case 'upsert':
+          if (msg.hasOwnProperty('externalId')) {
+            sobj.sobject.setExternalId(msg.externalId.field, msg.externalId.value);
           }
+          dmlResult = org.upsert(payload);
+          break;
+        case 'delete':
+          dmlResult = org.delete(payload);
+          break;
+        default:
+          // eslint-disable-next-line no-case-declarations
+          const err = new Error('Unknown method:' + theAction);
+          reject(err);
+      }
 
-          return dmlResult;
-        })
-        .then((results) => {
-          msg.payload = {
+      dmlResult
+        .then((sfdcResult) => {
+          let result = {
             success: true,
             object: theObject.toLowerCase(),
             action: theAction,
-            id: results.id ? results.id : msg.externalId ? msg.externalId : msg.payload.id
+            id: sfdcResult.id ? sfdcResult.id : msg.externalId ? msg.externalId : msg.payload.id
           };
-
-          node.send(msg);
-          node.status({});
+          resolve(result);
         })
-        .catch((err) => nforce.error(node, msg, err));
+        .catch((err) => reject(err));
     });
+  };
+  actionHelper.inputToSFAction(node, msg, realAction);
+};
+
+module.exports = function(RED) {
+  function Dml(config) {
+    const node = this;
+    node.connection = RED.nodes.getNode(config.connection);
+    node.config = config;
+    node.on('input', (msg) => handleInput(node, msg));
+    RED.nodes.createNode(node, config);
   }
   RED.nodes.registerType('dml', Dml);
 };

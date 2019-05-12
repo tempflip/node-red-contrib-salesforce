@@ -1,48 +1,48 @@
 <script type="text/javascript">
-    RED.nodes.registerType('chatter', {
-        category: 'Salesforce',
-        color: '#C0DEED',
-        defaults: {
-            name: { value: '' },
-            connection: { value: '', type: 'connection-config', required: true }
-        },
-        inputs: 1,
-        outputs: 1,
-        icon: "salesforce.png",
-        align: "right",
-        label: function () {
-            return this.name || 'chatter';
-        }
-    });
+  RED.nodes.registerType('chatter', {
+    category: 'Salesforce',
+    color: '#C0DEED',
+    defaults: {
+      name: { value: '' },
+      connection: { value: '', type: 'connection-config', required: true }
+    },
+    inputs: 1,
+    outputs: 1,
+    icon: 'salesforce.png',
+    align: 'right',
+    label: function() {
+      return this.name || 'chatter';
+    }
+  });
 </script>
 
 <script type="text/x-red" data-template-name="chatter">
-    <div class="form-row">
-        <label for="node-input-name"><i class="icon-tag"></i> Name</label>
-        <input type="text" id="node-input-name" placeholder="Name">
-    </div>
-    <div class="form-row">
-        <label for="node-input-connection"><i class="fa fa-plug"></i> Connection</label>
-        <input type="text" id="node-input-connection">
-    </div>
+  <div class="form-row">
+      <label for="node-input-name"><i class="icon-tag"></i> Name</label>
+      <input type="text" id="node-input-name" placeholder="Name">
+  </div>
+  <div class="form-row">
+      <label for="node-input-connection"><i class="fa fa-plug"></i> Connection</label>
+      <input type="text" id="node-input-connection">
+  </div>
 </script>
 
 <script type="text/x-red" data-help-name="chatter">
-    <p>Creates a Chatter feed item</p>
-    <p>The action uses the following properties:</p>
-    <ul>
-        <li>
-            <code>msg.payload</code> (required): the message body
-        </li>
-        <li>
-            <code>msg.ParentId</code> (optional): the parent id the chatter post belongs to
-        </li>
-        <li>
-            <code>msg.RelatedRecordId</code> (optional): related record id
-        </li>
-        <li>
-            <code>msg.Title</code> (optional): Title for the chatter post
-        </li>
-    </ul>
-    <p>Return a JSON object with the insert results
+  <p>Creates a Chatter feed item</p>
+  <p>The action uses the following properties:</p>
+  <ul>
+      <li>
+          <code>msg.payload</code> (required): the message body
+      </li>
+      <li>
+          <code>msg.ParentId</code> (optional): the parent id the chatter post belongs to. If omitted goes to the current user
+      </li>
+      <li>
+          <code>msg.RelatedRecordId</code> (optional): related record id
+      </li>
+      <li>
+          <code>msg.title</code> (optional): Title for the chatter post
+      </li>
+  </ul>
+  <p>Return a JSON object with the insert results
 </script>

@@ -1,98 +1,148 @@
-module.exports = function(RED) {
-    const nforce = require('./nforce_wrapper');
-    //array to back-up the node & disconnect the streaming client when redeploying flow
-    const clients = {};
-    function Streaming(config) {
-        const node = this;
-        RED.nodes.createNode(node, config);
-        node.connection = RED.nodes.getNode(config.connection);
-        node.subscriptionActive = false;
-        node.client = {}; // The client
+const actionHelper = require('./lib/action_helper');
 
-        // back-up the node and disconnect/clean-up when redeploying flow to avoid duplicated subscription 
-        if(!clients[node.id]){
-            clients[node.id] = node;
-        }else{
-            if(clients[node.id].client.disconnect){
-                clients[node.id].client.disconnect();
-                clients[node.id] = node;
-            }
-        }
-        
-        node.status({ fill: 'gray', shape: 'ring', text: 'idle' });
+//array to back-up the node & disconnect the streaming client when redeploying flow
+const clients = {};
 
-        this.on('input', function(msg) {
-            const action = msg.action || 'subscribe';
-            if(!node.subscriptionActive){
-                if (action === 'subscribe') {
-                    // create connection object
-                    node.status({ fill: 'blue', shape: 'ring', text: 'connecting....' });
-                    debugger;
-                    const org = nforce.createConnection(node.connection, msg);
-                    nforce.authenticate(org, node.connection, msg, function(err, oauth) {
-                        let lastReplayId = -1;
-                        if (err) {
-                            node.status({ fill: 'red', shape: 'dot', text: 'Error:' + err.message });
-                            return node.error(err, err.message);
-                        }
-                        const opts = {};
-                        const topicType = msg.topicType || config.topicType;
-                        if (topicType === 'platform') {
-                            opts.isEvent = true;
-                        } else if (topicType === 'generic') {
-                            opts.isSystem = true;
-                        }
-                        // Topic in message takes priority over configuration
-                        opts.topic = msg.topic || config.pushTopic;
-                        const subscriptionMessage = 'Subscription on ' + topicType + ' to:' + opts.topic;
-    
-                        var stream;
-                        try {
-                            node.client = org.createStreamClient();
-                            stream = node.client.subscribe(opts);
-                            node.log(subscriptionMessage);
-                            node.status({ fill: 'blue', shape: 'dot', text: subscriptionMessage });
-                            node.subscriptionActive = true;
-                            stream.on('error', function(err) {
-                                node.log('Subscription error!!!');
-                                node.status({ fill: 'red', shape: 'dot', text: 'Error:' + err.message });
-                                node.log(err, msg);
-                                node.client.disconnect();
-                                node.subscriptionActive = false;
-                                return node.error(err, err.message);
-                            });
-                        } catch (ex) {
-                            node.status({ fill: 'red', shape: 'dot', text: 'Error:' + ex.message });
-                            return node.error(ex, ex.message);
-                        }
-    
-                        stream.on('data', function(data) {
-                            
-                            if(lastReplayId == data.event.replayId){
-                                return;
-                            }
-    
-                            lastReplayId = data.event.replayId;
-                            
-                            node.status({ fill: 'green', shape: 'dot', text: 'Receiving data' });
-                            node.send({
-                                payload: data
-                            });
-                            node.status({ fill: 'blue', shape: 'dot', text: subscriptionMessage });
-                        });
-                    });
-                }
-
-            } else {
-                // Unsubscribe only for active subscriptions
-                if (node.client.disconnect) {
-                    node.client.disconnect();
-                    node.status({ fill: 'gray', shape: 'ring', text: 'idle' });
-                    node.subscriptionActive = false;
-                }
-            }
-        });
+/**
+ * Configure and/or reset a subscription node
+ * @param {NodeRED node} node - the Subscription Node
+ * @param {Node configuration object} config the stored configuration
+ */
+const setupSubscriptionNode = (node, config) => {
+  node.config = config;
+  node.subscriptionActive = false;
+  node.client = {}; // The faye client
+  // back-up the node and disconnect/clean-up when
+  // redeploying flow to avoid duplicated subscription
+  if (!clients[node.id]) {
+    clients[node.id] = node;
+    node.startSubscriptionId = config.replayId;
+  } else {
+    // On redeployment we want to start
+    node.startSubscriptionId = clients[node.id].lastReceivedId || config.replayId;
+    if (clients[node.id].client.disconnect) {
+      clients[node.id].client.disconnect();
+      clients[node.id] = node;
     }
+  }
+};
 
-    RED.nodes.registerType('streaming', Streaming);
+const handleStreamError = (node, err) => {
+  node.log('Subscription error!!!');
+  actionHelper.error(node, err.message, err);
+  node.client.disconnect();
+  node.subscriptionActive = false;
+  return node.error(err, err.message);
+};
+
+const handleStreamData = (node, data) => {
+  const lastReplayId = node.lastReplayId || node.startSubscriptionId;
+  const newReplayId = data.event.replayId;
+  if (lastReplayId === newReplayId) {
+    // TODO: should a duplicate replay Error be swallowed?
+    const err = new Error('Duplicate replay id');
+    actionHelper.error(node, newReplayId, err);
+    return;
+  }
+  actionHelper.receiving(node);
+  node.send({
+    payload: data
+  });
+  actionHelper.subscribed(node, node.subscriptionMessage);
+};
+
+const createSubscription = (subscribeOptions) => {
+  const node = subscribeOptions.node;
+  if (node.subscriptionActive) {
+    if (node.config.resubScribeOnDoubeSubscription) {
+      // Terminate subscription first, ignore the resolve/reject
+      terminateSubscription(node, () => {}, () => {});
+    } else {
+      // We don't subscribe again
+      subscribeOptions.resolve();
+      return;
+    }
+  }
+  const config = node.config;
+  const msg = subscribeOptions.msg;
+  const streamOpts = {
+    // Topic in message takes priority over configuration
+    topic: msg.topic || config.pushTopic,
+    replayId: msg.replayId || node.startSubscriptionId,
+    oauth: subscribeOptions.oauth
+  };
+
+  try {
+    const org = subscribeOptions.org;
+    node.subscriptionMessage = 'Subscribed to:' + streamOpts.topic;
+    const fayeOptions = {
+      oauth: subscribeOptions.oauth
+      //timeout: 90,
+      //retry: 60
+    };
+    node.client = org.createStreamClient(fayeOptions);
+    const stream = node.client.subscribe(streamOpts);
+    node.log(node.subscriptionMessage);
+    node.subscriptionActive = true;
+    stream.on('error', (err) => handleStreamError(node, err));
+    stream.on('data', (data) => handleStreamData(node, data));
+  } catch (ex) {
+    subscribeOptions.reject(ex);
+  }
+
+  actionHelper.subscribed(node, node.subscriptionMessage);
+  subscribeOptions.resolve();
+};
+
+const terminateSubscription = (subscribeOptions) => {
+  const node = subscribeOptions.node;
+  if (node.subscriptionActive) {
+    try {
+      if (node.client.disconnect) {
+        node.client.disconnect();
+      }
+    } catch (err) {
+      subscribeOptions.reject(err);
+    }
+  }
+  // Terminate in any case
+  node.subscriptionActive = false;
+  actionHelper.idle(node);
+  subscribeOptions.resolve();
+};
+
+const handleInput = (node, msg) => {
+  const action = msg.action || (node.subscriptionActive ? 'unsubscribe' : 'subscribe');
+  const realAction = (org, payload, nforce) => {
+    return new Promise((resolve, reject) => {
+      const subscribeOptions = {
+        node,
+        org,
+        msg,
+        oauth: payload.oauth,
+        nforce,
+        resolve,
+        reject
+      };
+      if (action === 'subscribe') {
+        createSubscription(subscribeOptions);
+      } else {
+        terminateSubscription(subscribeOptions);
+      }
+    });
+  };
+  actionHelper.inputToSFAction(node, msg, realAction);
+};
+
+// Make available to NodeRED
+module.exports = function(RED) {
+  function Streaming(config) {
+    const node = this;
+    node.connection = RED.nodes.getNode(config.connection);
+    setupSubscriptionNode(node, config);
+    node.on('input', (msg) => handleInput(node, msg));
+    RED.nodes.createNode(node, config);
+    actionHelper.idle(node);
+  }
+  RED.nodes.registerType('streaming', Streaming);
 };

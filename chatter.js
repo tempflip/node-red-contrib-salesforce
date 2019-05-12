@@ -1,57 +1,63 @@
-module.exports = function (RED) {
+const actionHelper = require('./lib/action_helper');
 
-    const nforce = require('./nforce_wrapper');
+// Little hack to get current user ID for chatter messages
+const extractUserid = (payload) => {
+  const oauth = payload.oauth;
+  if (oauth.id) {
+    const id = oauth.id;
+    const lastSlash = id.lastIndexOf('/');
+    return id.substring(lastSlash + 1);
+  }
+  return null;
+};
 
-    function Chatter(config) {
-        const node = this;
-        RED.nodes.createNode(this, config);
-        this.connection = RED.nodes.getNode(config.connection);
+const handleInput = (node, msg) => {
+  const realAction = (org, payload, nforce) => {
+    return new Promise((resolve, reject) => {
+      const sobj = nforce.force.createSObject('FeedItem');
+      sobj.set('Body', msg.payload);
+      // Additional fields for addressing the chatter post properly
+      if (msg.ParentId) {
+        sobj.set('ParentId', msg.ParentId);
+      } else {
+        // Attach to current user
+        sobj.set('ParentId', extractUserid(payload));
+      }
 
-        this.on('input', msg => {
+      if (msg.RelatedRecordId) {
+        sobj.set('RelatedRecordId', msg.RelatedRecordId);
+      }
 
-            // show initial status of progress
-            node.status({ fill: "green", shape: "ring", text: "connecting...." });
+      if (msg.title) {
+        sobj.set('title', msg.title);
+      }
+      payload.sobject = sobj;
 
-            const payload = nforce.force.createSObject('FeedItem');
-            payload.Body = msg.payload
+      org
+        .insert(payload)
+        .then((sfdcResult) => {
+          let result = {
+            success: true,
+            object: 'feeditem',
+            action: 'insert',
+            id: sfdcResult.id ? sfdcResult.id : msg.externalId ? msg.externalId : msg.payload.id
+          };
+          resolve(result);
+        })
+        .catch((err) => reject(err));
+    });
+  };
 
-            // Additional fields for addressing the chatter post properly
-            if (msg.ParentId) {
-                payload.ParentId = msg.ParentId;
-            }
+  actionHelper.inputToSFAction(node, msg, realAction);
+};
 
-            if (msg.RelatedRecordId) {
-                payload.RelatedRecordId = msg.RelatedRecordId;
-            }
-
-            if (msg.Title) {
-                payload.Title = msg.Title;
-            }
-
-            // create connection object
-            const orgResult = nforce.createConnection(this.connection);
-
-            // auth and insert Feed Item
-            nforce
-                .authenticate(orgResult.connection, orgResult.config)
-                .then(result => {
-                    const sobj = { sobject: payload };
-                    return orgResult.connection.insert(sobj)
-                        .catch(err => {
-                            node.status({ fill: 'red', shape: 'dot', text: 'Error:' + e.message });
-                            node.error(err, msg);
-                        });
-                })
-                .then(results => {
-                    msg.payload = results.records.map(record => record.toJSON());
-                    node.send(msg);
-                    node.status({});
-                })
-                .catch(function (err) {
-                    node.status({ fill: 'red', shape: 'dot', text: 'Error:' + e.message });
-                    node.error(err, msg);
-                });
-        });
-    }
-    RED.nodes.registerType("chatter", Chatter);
+module.exports = function(RED) {
+  function Chatter(config) {
+    const node = this;
+    node.connection = RED.nodes.getNode(config.connection);
+    node.config = config;
+    node.on('input', (msg) => handleInput(node, msg));
+    RED.nodes.createNode(node, config);
+  }
+  RED.nodes.registerType('chatter', Chatter);
 };
