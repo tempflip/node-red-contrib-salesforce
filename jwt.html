@@ -1,0 +1,39 @@
+<script type="text/javascript">
+  RED.nodes.registerType('sfdc-jwt', {
+    category: 'Salesforce',
+    color: '#C0DEED',
+    defaults: {
+      name: { value: '' },
+      userId: { value: '' },
+      connection: { value: '', type: 'sfdc-connection-config', required: true }
+    },
+    inputs: 1,
+    outputs: 1,
+    icon: 'salesforce.png',
+    align: 'right',
+    label: function() {
+      return this.name || 'sfdc-jwt';
+    }
+  });
+</script>
+
+<script type="text/x-red" data-template-name="sfdc-jwt">
+  <div class="form-row">
+      <label for="node-input-name"><i class="icon-tag"></i> Name</label>
+      <input type="text" id="node-input-name" placeholder="Name">
+  </div>
+  <div class="form-row">
+      <label for="node-input-connection"><i class="fa fa-plug"></i> Connection</label>
+      <input type="text" id="node-input-connection">
+  </div>
+  <div class="form-row">
+      <label for="node-input-userId"><i class="fa fa-user"></i> User</label>
+      <input type="text" id="node-input-userId" placeholder="Salesforce UserId">
+  </div>
+</script>
+
+<script type="text/x-red" data-help-name="sfdc-jwt">
+  <p>Creates a valid user session for the given userId and adds it to `msg.oauth`</p>
+  <p>Requires a complete JWT setup to work - handle with care</p>
+  <p>UserId can be determined using `msg.UserId`</p>
+</script>

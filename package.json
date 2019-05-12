@@ -36,7 +36,8 @@
       "sfdc-streaming": "streaming.js",
       "sfdc-obm": "obm.js",
       "sfdc-connection-config": "connection-config.js",
-      "sfdc-rest": "rest.js"
+      "sfdc-rest": "rest.js",
+      "sfdc-jwt": "jwt.js"
     }
   },
   "license": "MIT",
