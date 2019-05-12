@@ -9,48 +9,54 @@ const actionHelper = require('./lib/action_helper');
 const handleInput = (node, msg) => {
   const config = node.config;
   const realAction = (nforce, org, payload) => {
-    // check for overriding message properties
-    // action and object overwrite the configured ones
-    const theAction = msg.action ? msg.action : config.action;
-    const theObject = msg.object ? msg.object : config.object;
-    const sobj = nforce.force.createSObject(theObject, msg.payload);
-    Object.assign(payload, { sobject: sobj });
-    // Headers determine some of the behavior - we pass them on
-    nforce.extractHeaders(payload, msg);
+    return new Promise((resolve, reject) => {
+      // check for overriding message properties
+      // action and object overwrite the configured ones
+      const theAction = msg.action ? msg.action : config.action;
+      const theObject = msg.object ? msg.object : config.object;
+      const sobj = nforce.force.createSObject(theObject, msg.payload);
+      Object.assign(payload, {
+        sobject: sobj
+      });
+      // Headers determine some of the behavior - we pass them on
+      nforce.extractHeaders(payload, msg);
 
-    let dmlResult;
-    switch (theAction) {
-      case 'insert':
-        dmlResult = org.insert(payload);
-        break;
-      case 'update':
-        dmlResult = org.update(payload);
-        break;
-      case 'upsert':
-        if (msg.hasOwnProperty('externalId')) {
-          sobj.sobject.setExternalId(msg.externalId.field, msg.externalId.value);
-        }
-        dmlResult = org.upsert(payload);
-        break;
-      case 'delete':
-        dmlResult = org.delete(payload);
-        break;
-      default:
-        // eslint-disable-next-line no-case-declarations
-        const err = new Error('Unknown method:' + theAction);
-        nforce.error(node, msg, err);
-    }
+      let dmlResult;
+      switch (theAction) {
+        case 'insert':
+          dmlResult = org.insert(payload);
+          break;
+        case 'update':
+          dmlResult = org.update(payload);
+          break;
+        case 'upsert':
+          if (msg.hasOwnProperty('externalId')) {
+            sobj.sobject.setExternalId(msg.externalId.field, msg.externalId.value);
+          }
+          dmlResult = org.upsert(payload);
+          break;
+        case 'delete':
+          dmlResult = org.delete(payload);
+          break;
+        default:
+          // eslint-disable-next-line no-case-declarations
+          const err = new Error('Unknown method:' + theAction);
+          reject(err);
+      }
 
-    let result = {
-      success: true,
-      object: theObject.toLowerCase(),
-      action: theAction,
-      id: dmlResult.id ? dmlResult.id : msg.externalId ? msg.externalId : msg.payload.id
-    };
-
-    return result;
+      dmlResult
+        .then((sfdcResult) => {
+          let result = {
+            success: true,
+            object: theObject.toLowerCase(),
+            action: theAction,
+            id: sfdcResult.id ? sfdcResult.id : msg.externalId ? msg.externalId : msg.payload.id
+          };
+          resolve(result);
+        })
+        .catch((err) => reject(err));
+    });
   };
-
   actionHelper.inputToSFAction(node, msg, realAction);
 };
 

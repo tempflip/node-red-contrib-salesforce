@@ -1,4 +1,4 @@
-const nforce = require('./lib/nforce_wrapper');
+const actionHelper = require('./lib/action_helper');
 
 /**
  * Executes a SOQL query based on configuration and msg
@@ -8,35 +8,25 @@ const nforce = require('./lib/nforce_wrapper');
  */
 const handleInput = (node, msg) => {
   const config = node.config;
-  const connection = node.connection;
 
-  // show initial status of progress
-  nforce.connect(node, 'connecting...');
-
-  // create connection object
-  const orgResult = nforce.createConnection(connection, msg);
-  const org = orgResult.org;
-  const orgConfig = orgResult.config;
-  // auth and run query
-  nforce
-    .authenticate(org, orgConfig, nforce.getOAuth(orgConfig))
-    .then((oauth) => {
-      nforce.setOAuth(oauth, orgConfig);
-      // use msg query if provided
-      const payload = {
+  const realAction = (nforce, org, payload) => {
+    return new Promise((resolve, reject) => {
+      Object.assign(payload, {
         fetchAll: config.fetchAll,
-        query: msg.query || config.query,
-        oauth: oauth
-      };
+        query: msg.query || config.query
+      });
 
-      return org.query(payload).catch((err) => nforce.error(node, msg, err));
-    })
-    .then((results) => {
-      msg.payload = results.records.map((r) => r.toJSON());
-      node.send(msg);
-      node.status({});
-    })
-    .catch((err) => nforce.error(node, msg, err));
+      org
+        .query(payload)
+        .then((results) => {
+          const finalResults = results.records.map((r) => r.toJSON());
+          resolve(finalResults);
+        })
+        .catch((err) => reject(err));
+    });
+  };
+
+  actionHelper.inputToSFAction(node, msg, realAction);
 };
 
 /* Make code available */
