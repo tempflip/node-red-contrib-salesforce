@@ -1,5 +1,11 @@
 const nforce = require('./nforce_wrapper');
 
+/**
+ * Executes a SOSL query based on configuration and msg
+ *
+ * @param {node-red-node} node the current node
+ * @param {msg} msg the incoming message
+ */
 const handleInput = (node, msg) => {
   const config = node.config;
   const connection = node.connection;
