@@ -1,10 +1,6 @@
 {
   "name": "node-red-contrib-salesforce",
-<<<<<<< HEAD
-  "version": "0.7.1",
-=======
   "version": "0.7.2",
->>>>>>> develop
   "description": "A set of Node-RED nodes to interact with Salesforce and Force.com.",
   "author": {
     "name": "Jeff Douglas",
