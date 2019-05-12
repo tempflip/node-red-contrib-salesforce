@@ -1,9 +1,16 @@
 # Changelog
 
+## 0.7.0
+
+- All event types are now supported
+- beginning of Mocha test coverage
+- Chatter node now functional
+
 ## 0.6.1
 
 - Switched to nforce8
 - tested on NodeRED 0.20.0
+- SOQL / SOSL will only return JSON
 
 ## 0.2.3
 
