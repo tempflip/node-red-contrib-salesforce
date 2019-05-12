@@ -28,8 +28,8 @@ const handleInput = (node, msg) => {
         sobj.set('RelatedRecordId', msg.RelatedRecordId);
       }
 
-      if (msg.Title) {
-        sobj.set('Title', msg.Title);
+      if (msg.title) {
+        sobj.set('title', msg.title);
       }
       payload.sobject = sobj;
 
