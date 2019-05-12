@@ -1,4 +1,4 @@
-const nforce = require('./nforce_wrapper');
+const nforce = require('./lib/nforce_wrapper');
 
 /**
  * Executes a SOSL query based on configuration and msg

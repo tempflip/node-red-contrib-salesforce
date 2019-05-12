@@ -1,4 +1,4 @@
-const nforce = require('./nforce_wrapper');
+const nforce = require('./lib/nforce_wrapper');
 
 module.exports = function(RED) {
   //array to back-up the node & disconnect the streaming client when redeploying flow

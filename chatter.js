@@ -1,5 +1,5 @@
 module.exports = function(RED) {
-  const nforce = require('./nforce_wrapper');
+  const nforce = require('./lib/nforce_wrapper');
 
   function Chatter(config) {
     const node = this;
