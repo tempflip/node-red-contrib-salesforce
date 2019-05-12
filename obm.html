@@ -1,45 +1,45 @@
 <script type="text/javascript">
-    RED.nodes.registerType('obm', {
-        category: 'Salesforce',
-        color: '#C0DEED',
-        defaults: {
-            name: {
-                value: ''
-            }
-        },
-        inputs: 1,
-        outputs: 2,
-        icon: "salesforce.png",
-        label: function() {
-            return this.name || "parse obm";
-        }
-    });
+  RED.nodes.registerType('sfdc-obm', {
+    category: 'Salesforce',
+    color: '#C0DEED',
+    defaults: {
+      name: {
+        value: ''
+      }
+    },
+    inputs: 1,
+    outputs: 2,
+    icon: 'salesforce.png',
+    label: function() {
+      return this.name || 'SFDC Outbound Message';
+    }
+  });
 </script>
 
-<script type="text/x-red" data-template-name="obm">
-    <div class="form-row">
-        <label for="node-input-name"><i class="icon-tag"></i> Name</label>
-        <input type="text" id="node-input-name" placeholder="Name">
-    </div>
+<script type="text/x-red" data-template-name="sfdc-obm">
+  <div class="form-row">
+      <label for="node-input-name"><i class="icon-tag"></i> Name</label>
+      <input type="text" id="node-input-name" placeholder="Name">
+  </div>
 </script>
 
-<script type="text/x-red" data-help-name="obm">
-    <p>When used with an http in node, parses the XML from a Salesforce Outbound Message to a JSON object.</p>
-    <p>The resulting <code>msg.payload</code> should look something like:
-        <pre>{
-  "organizationId": "00D37000000PdLZAE1",
-  "actionId": "04k370000008OrqZZE",
-  "sobject": {
-    "type": "Contact",
-    "id": "a0037000001I1EvWWO",
-    "name": "Nikola Tesla",
-    "firstname": "Nikola",
-    "lastname": "Tesla"
-  },
-  "sessionId": "00D37000000PdLB!"
-}</pre>
-    </p>
-    <p>Connect this node downstream from a POST http input node to parse the XML received from an Outbound Message call from Salesforce. Use the URL from the http in node for the Endpoint URL for your Outbound Message.</p>
-    <p>See the <a href="https://developer.salesforce.com/docs/atlas.en-us.api.meta/api/sforce_api_om_outboundmessaging_setting_up.htm" target="_blank">Salesforce Setting Up Outbound Messaging documentation</a> for more information.</p>
-    <p>The second exit simplifies the construction of the reply to the OBM. When nothing further is required, connect that one to a http response and it will return the expected message to SFDC</p>
+<script type="text/x-red" data-help-name="sfdc-obm">
+      <p>When used with an http in node, parses the XML from a Salesforce Outbound Message to a JSON object.</p>
+      <p>The resulting <code>msg.payload</code> should look something like:
+          <pre>{
+    "organizationId": "00D37000000PdLZAE1",
+    "actionId": "04k370000008OrqZZE",
+    "sobject": {
+      "type": "Contact",
+      "id": "a0037000001I1EvWWO",
+      "name": "Nikola Tesla",
+      "firstname": "Nikola",
+      "lastname": "Tesla"
+    },
+    "sessionId": "00D37000000PdLB!"
+  }</pre>
+      </p>
+      <p>Connect this node downstream from a POST http input node to parse the XML received from an Outbound Message call from Salesforce. Use the URL from the http in node for the Endpoint URL for your Outbound Message.</p>
+      <p>See the <a href="https://developer.salesforce.com/docs/atlas.en-us.api.meta/api/sforce_api_om_outboundmessaging_setting_up.htm" target="_blank">Salesforce Setting Up Outbound Messaging documentation</a> for more information.</p>
+      <p>The second exit simplifies the construction of the reply to the OBM. When nothing further is required, connect that one to a http response and it will return the expected message to SFDC</p>
 </script>

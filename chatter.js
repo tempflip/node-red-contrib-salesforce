@@ -59,5 +59,5 @@ module.exports = function(RED) {
     node.on('input', (msg) => handleInput(node, msg));
     RED.nodes.createNode(node, config);
   }
-  RED.nodes.registerType('chatter', Chatter);
+  RED.nodes.registerType('sfdc-chatter', Chatter);
 };

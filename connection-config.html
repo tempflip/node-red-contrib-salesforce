@@ -1,6 +1,6 @@
 <script type="text/javascript">
   const API_VERSION = 'v45.0';
-  RED.nodes.registerType('connection-config', {
+  RED.nodes.registerType('sfdc-connection-config', {
     category: 'config',
     defaults: {
       name: {
@@ -100,7 +100,7 @@
   });
 </script>
 
-<script type="text/x-red" data-template-name="connection-config">
+<script type="text/x-red" data-template-name="sfdc-connection-config">
   <div class="form-row">
       <label for="node-config-input-name"><i class="icon-bookmark"></i> Name</label>
       <input type="text" id="node-config-input-name" />
@@ -167,7 +167,7 @@
   </div>
 </script>
 
-<script type="text/x-red" data-help-name="connection-config">
+<script type="text/x-red" data-help-name="sfdc-connection-config">
   <h3>Setting up a config node</h3>
   <ul>
       <li><b>Name</b>: NodeRED internal name of the connection. When you use environment credentials: prefix of the credential variables (see below)

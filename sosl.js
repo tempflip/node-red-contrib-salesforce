@@ -36,5 +36,5 @@ module.exports = function(RED) {
     node.on('input', (msg) => handleInput(node, msg));
     RED.nodes.createNode(node, config);
   }
-  RED.nodes.registerType('sosl', SoslQuery);
+  RED.nodes.registerType('sfdc-sosl', SoslQuery);
 };

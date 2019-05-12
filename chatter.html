@@ -1,22 +1,22 @@
 <script type="text/javascript">
-  RED.nodes.registerType('chatter', {
+  RED.nodes.registerType('sfdc-chatter', {
     category: 'Salesforce',
     color: '#C0DEED',
     defaults: {
       name: { value: '' },
-      connection: { value: '', type: 'connection-config', required: true }
+      connection: { value: '', type: 'sfdc-connection-config', required: true }
     },
     inputs: 1,
     outputs: 1,
     icon: 'salesforce.png',
     align: 'right',
     label: function() {
-      return this.name || 'chatter';
+      return this.name || 'SFDC Chatter';
     }
   });
 </script>
 
-<script type="text/x-red" data-template-name="chatter">
+<script type="text/x-red" data-template-name="sfdc-chatter">
   <div class="form-row">
       <label for="node-input-name"><i class="icon-tag"></i> Name</label>
       <input type="text" id="node-input-name" placeholder="Name">
@@ -27,7 +27,7 @@
   </div>
 </script>
 
-<script type="text/x-red" data-help-name="chatter">
+<script type="text/x-red" data-help-name="sfdc-chatter">
   <p>Creates a Chatter feed item</p>
   <p>The action uses the following properties:</p>
   <ul>

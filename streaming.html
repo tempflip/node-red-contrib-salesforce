@@ -1,5 +1,5 @@
 <script type="text/javascript">
-  RED.nodes.registerType('streaming', {
+  RED.nodes.registerType('sfdc-streaming', {
     category: 'Salesforce',
     color: '#C0DEED',
     defaults: {
@@ -19,7 +19,7 @@
       },
       connection: {
         value: '',
-        type: 'connection-config',
+        type: 'sfdc-connection-config',
         required: true
       }
     },
@@ -27,7 +27,7 @@
     outputs: 1,
     icon: 'salesforce.png',
     label: function() {
-      return this.name || 'streaming';
+      return this.name || 'sfdc streaming';
     },
     oneditsave: function() {
       this.topicType = $('#node-config-input-topicType').val();
@@ -35,7 +35,7 @@
   });
 </script>
 
-<script type="text/x-red" data-template-name="streaming">
+<script type="text/x-red" data-template-name="sfdc-streaming">
   <div class="form-row">
       <label for="node-input-name"><i class="icon-tag"></i> Name</label>
       <input type="text" id="node-input-name" placeholder="Name">
@@ -60,7 +60,7 @@
   </div>
 </script>
 
-<script type="text/x-red" data-help-name="streaming">
+<script type="text/x-red" data-help-name="sfdc-streaming">
       <p>Creates a client that subscribes to a PushTopic for all things streaming API including CDC</p>
       <p>You need to provide the full topic starting with <code>/</code>. Samples:</p>
       <ul>

@@ -1,55 +1,55 @@
 <script type="text/javascript">
-    RED.nodes.registerType('soql', {
-        category: 'Salesforce',
-        color: '#C0DEED',
-        defaults: {
-            name: {
-                value: ""
-            },
-            query: {
-                value: ""
-            },
-            connection: {
-                value: "",
-                type: "connection-config",
-                required: true
-            },
-            fetchAll: {
-                value: false
-            },
-            returnJSON: {
-                value: true
-            }
-        },
-        inputs: 1,
-        outputs: 1,
-        icon: "salesforce.png",
-        label: function () {
-            return this.name || "soql query";
-        }
-    });
+  RED.nodes.registerType('sfdc-soql', {
+    category: 'Salesforce',
+    color: '#C0DEED',
+    defaults: {
+      name: {
+        value: ''
+      },
+      query: {
+        value: ''
+      },
+      connection: {
+        value: '',
+        type: 'sfdc-connection-config',
+        required: true
+      },
+      fetchAll: {
+        value: false
+      },
+      returnJSON: {
+        value: true
+      }
+    },
+    inputs: 1,
+    outputs: 1,
+    icon: 'salesforce.png',
+    label: function() {
+      return this.name || 'sfdc soql query';
+    }
+  });
 </script>
 
-<script type="text/x-red" data-template-name="soql">
-    <div class="form-row">
-        <label for="node-input-name"><i class="icon-tag"></i> Name</label>
-        <input type="text" id="node-input-name" placeholder="Name">
-    </div>
-    <div class="form-row">
-        <label for="node-input-connection"><i class="fa fa-plug"></i> Connection</label>
-        <input type="text" id="node-input-connection">
-    </div>
-    <div class="form-row">
-        <label for="node-input-query"><i class="fa fa-database"></i> Query</label>
-        <textarea id="node-input-query" style="width:300px"></textarea>
-    </div>
-    <div class="form-row" style="white-space:nowrap">
-        <label for="node-input-fetchAll"><i class="fa fa-list"></i> Fetch all result records</label>
-        <input type="checkbox" id="node-input-fetchAll" style="position:absolute;left:20px" />
-    </div>
+<script type="text/x-red" data-template-name="sfdc-soql">
+  <div class="form-row">
+      <label for="node-input-name"><i class="icon-tag"></i> Name</label>
+      <input type="text" id="node-input-name" placeholder="Name">
+  </div>
+  <div class="form-row">
+      <label for="node-input-connection"><i class="fa fa-plug"></i> Connection</label>
+      <input type="text" id="node-input-connection">
+  </div>
+  <div class="form-row">
+      <label for="node-input-query"><i class="fa fa-database"></i> Query</label>
+      <textarea id="node-input-query" style="width:300px"></textarea>
+  </div>
+  <div class="form-row" style="white-space:nowrap">
+      <label for="node-input-fetchAll"><i class="fa fa-list"></i> Fetch all result records</label>
+      <input type="checkbox" id="node-input-fetchAll" style="position:absolute;left:20px" />
+  </div>
 </script>
 
-<script type="text/x-red" data-help-name="soql">
+<script type="text/x-red" data-help-name="sfdc-soql">
     <p>Executes a SOQL query.</p>
     <pre>
   select id, name

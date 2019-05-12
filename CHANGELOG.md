@@ -1,6 +1,11 @@
 # Changelog
 
-## 0.7.0
+## 1.0.0
+
+- Breaking change: prefixed all nodes with `sfdc-` to avoid naming conflicts
+- Introduction of REST preparation node to be used with http request node
+
+## 0.7.2
 
 - All event types are now supported
 - beginning of Mocha test coverage

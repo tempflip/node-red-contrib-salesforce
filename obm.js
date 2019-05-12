@@ -61,5 +61,5 @@ module.exports = function(RED) {
       });
     });
   }
-  RED.nodes.registerType('obm', ParseObm);
+  RED.nodes.registerType('sfdc-obm', ParseObm);
 };

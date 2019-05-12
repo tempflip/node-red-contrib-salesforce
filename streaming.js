@@ -144,5 +144,5 @@ module.exports = function(RED) {
     RED.nodes.createNode(node, config);
     actionHelper.idle(node);
   }
-  RED.nodes.registerType('streaming', Streaming);
+  RED.nodes.registerType('sfdc-streaming', Streaming);
 };

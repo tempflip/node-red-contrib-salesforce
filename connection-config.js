@@ -74,5 +74,5 @@ module.exports = (RED) => {
     // Register the Node
     RED.nodes.createNode(this, config);
   }
-  RED.nodes.registerType('connection-config', ConnectionConfig);
+  RED.nodes.registerType('sfdc-connection-config', ConnectionConfig);
 };

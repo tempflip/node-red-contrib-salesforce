@@ -68,5 +68,5 @@ module.exports = function(RED) {
     node.on('input', (msg) => handleInput(node, msg));
     RED.nodes.createNode(node, config);
   }
-  RED.nodes.registerType('dml', Dml);
+  RED.nodes.registerType('sfdc-dml', Dml);
 };
