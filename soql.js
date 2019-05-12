@@ -9,7 +9,7 @@ const actionHelper = require('./lib/action_helper');
 const handleInput = (node, msg) => {
   const config = node.config;
 
-  const realAction = (nforce, org, payload) => {
+  const realAction = (org, payload) => {
     return new Promise((resolve, reject) => {
       Object.assign(payload, {
         fetchAll: config.fetchAll,
@@ -35,7 +35,7 @@ module.exports = function(RED) {
     const node = this;
     node.connection = RED.nodes.getNode(config.connection);
     node.config = config;
-    this.on('input', (msg) => handleInput(node, msg));
+    node.on('input', (msg) => handleInput(node, msg));
     RED.nodes.createNode(node, config);
   }
   RED.nodes.registerType('soql', SoqlQuery);

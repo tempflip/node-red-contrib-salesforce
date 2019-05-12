@@ -1,54 +1,63 @@
-module.exports = function(RED) {
-  const nforce = require('./lib/nforce_wrapper');
+const actionHelper = require('./lib/action_helper');
 
-  function Chatter(config) {
-    const node = this;
-    RED.nodes.createNode(this, config);
-    this.connection = RED.nodes.getNode(config.connection);
+// Little hack to get current user ID for chatter messages
+const extractUserid = (payload) => {
+  const oauth = payload.oauth;
+  if (oauth.id) {
+    const id = oauth.id;
+    const lastSlash = id.lastIndexOf('/');
+    return id.substring(lastSlash + 1);
+  }
+  return null;
+};
 
-    this.on('input', (msg) => {
-      // show initial status of progress
-      node.status({ fill: 'green', shape: 'ring', text: 'connecting....' });
-
-      const payload = nforce.force.createSObject('FeedItem');
-      payload.Body = msg.payload;
-
+const handleInput = (node, msg) => {
+  const realAction = (org, payload, nforce) => {
+    return new Promise((resolve, reject) => {
+      const sobj = nforce.force.createSObject('FeedItem');
+      sobj.set('Body', msg.payload);
       // Additional fields for addressing the chatter post properly
       if (msg.ParentId) {
-        payload.ParentId = msg.ParentId;
+        sobj.set('ParentId', msg.ParentId);
+      } else {
+        // Attach to current user
+        sobj.set('ParentId', extractUserid(payload));
       }
 
       if (msg.RelatedRecordId) {
-        payload.RelatedRecordId = msg.RelatedRecordId;
+        sobj.set('RelatedRecordId', msg.RelatedRecordId);
       }
 
       if (msg.Title) {
-        payload.Title = msg.Title;
+        sobj.set('Title', msg.Title);
       }
+      payload.sobject = sobj;
 
-      // create connection object
-      const orgResult = nforce.createConnection(this.connection);
-
-      // auth and insert Feed Item
-      nforce
-        .authenticate(orgResult.org, orgResult.config)
-        .then((result) => {
-          const sobj = { sobject: payload };
-          return orgResult.org.insert(sobj).catch((err) => {
-            node.status({ fill: 'red', shape: 'dot', text: 'Error:' + err.message });
-            node.error(err, msg);
-          });
+      org
+        .insert(payload)
+        .then((sfdcResult) => {
+          let result = {
+            success: true,
+            object: 'feeditem',
+            action: 'insert',
+            id: sfdcResult.id ? sfdcResult.id : msg.externalId ? msg.externalId : msg.payload.id
+          };
+          resolve(result);
         })
-        .then((results) => {
-          msg.payload = results.records.map((record) => record.toJSON());
-          node.send(msg);
-          node.status({});
-        })
-        .catch(function(err) {
-          node.status({ fill: 'red', shape: 'dot', text: 'Error:' + err.message });
-          node.error(err, msg);
-        });
+        .catch((err) => reject(err));
     });
+  };
+
+  actionHelper.inputToSFAction(node, msg, realAction);
+};
+
+module.exports = function(RED) {
+  function Chatter(config) {
+    const node = this;
+    node.connection = RED.nodes.getNode(config.connection);
+    node.config = config;
+    node.on('input', (msg) => handleInput(node, msg));
+    RED.nodes.createNode(node, config);
   }
   RED.nodes.registerType('chatter', Chatter);
 };

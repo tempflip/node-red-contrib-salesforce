@@ -8,7 +8,7 @@ const actionHelper = require('./lib/action_helper');
  */
 const handleInput = (node, msg) => {
   const config = node.config;
-  const realAction = (nforce, org, payload) => {
+  const realAction = (org, payload, nforce) => {
     return new Promise((resolve, reject) => {
       // check for overriding message properties
       // action and object overwrite the configured ones
