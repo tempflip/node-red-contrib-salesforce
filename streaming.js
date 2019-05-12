@@ -1,104 +1,133 @@
-const nforce = require('./lib/nforce_wrapper');
+const actionHelper = require('./lib/action_helper');
 
-module.exports = function(RED) {
-  //array to back-up the node & disconnect the streaming client when redeploying flow
-  const clients = {};
-  function Streaming(config) {
-    const node = this;
-    RED.nodes.createNode(node, config);
-    node.connection = RED.nodes.getNode(config.connection);
-    node.subscriptionActive = false;
-    node.client = {}; // The client
+//array to back-up the node & disconnect the streaming client when redeploying flow
+const clients = {};
 
-    // back-up the node and disconnect/clean-up when redeploying flow to avoid duplicated subscription
-    if (!clients[node.id]) {
+/**
+ * Configure and/or reset a subscription node
+ * @param {NodeRED node} node - the Subscription Node
+ * @param {Node configuration object} config the stored configuration
+ */
+const setupSubscriptionNode = (node, config) => {
+  node.config = config;
+  node.subscriptionActive = false;
+  node.client = {}; // The faye client
+  // back-up the node and disconnect/clean-up when
+  // redeploying flow to avoid duplicated subscription
+  if (!clients[node.id]) {
+    clients[node.id] = node;
+    node.startSubscriptionId = config.replayId;
+  } else {
+    // On redeployment we want to start
+    node.startSubscriptionId = clients[node.id].lastReceivedId || config.replayId;
+    if (clients[node.id].client.disconnect) {
+      clients[node.id].client.disconnect();
       clients[node.id] = node;
-    } else {
-      if (clients[node.id].client.disconnect) {
-        clients[node.id].client.disconnect();
-        clients[node.id] = node;
-      }
     }
-
-    node.status({ fill: 'gray', shape: 'ring', text: 'idle' });
-
-    this.on('input', function(msg) {
-      const action = msg.action || 'subscribe';
-      if (!node.subscriptionActive) {
-        if (action === 'subscribe') {
-          // create connection object
-          node.status({ fill: 'blue', shape: 'ring', text: 'connecting....' });
-          const org = nforce.createConnection(node.connection, msg);
-          // TODO: Fix authentication to promise, not callback
-          nforce
-            .authenticate(org, node.connection, msg)
-            // eslint-disable-next-line no-unused-vars
-            .then((oauth) => {
-              let lastReplayId = -1;
-              const opts = {};
-              const topicType = msg.topicType || config.topicType;
-              if (topicType === 'platform') {
-                opts.isEvent = true;
-              } else if (topicType === 'generic') {
-                opts.isSystem = true;
-              }
-              // Topic in message takes priority over configuration
-              opts.topic = msg.topic || config.pushTopic;
-              const subscriptionMessage = 'Subscription on ' + topicType + ' to:' + opts.topic;
-
-              var stream;
-              try {
-                node.client = org.createStreamClient();
-                stream = node.client.subscribe(opts);
-                node.log(subscriptionMessage);
-                node.status({ fill: 'blue', shape: 'dot', text: subscriptionMessage });
-                node.subscriptionActive = true;
-                stream.on('error', function(err) {
-                  node.log('Subscription error!!!');
-                  node.status({ fill: 'red', shape: 'dot', text: 'Error:' + err.message });
-                  node.log(err, msg);
-                  node.client.disconnect();
-                  node.subscriptionActive = false;
-                  return node.error(err, err.message);
-                });
-              } catch (ex) {
-                node.status({ fill: 'red', shape: 'dot', text: 'Error:' + ex.message });
-                return node.error(ex, ex.message);
-              }
-
-              stream.on('data', function(data) {
-                if (lastReplayId == data.event.replayId) {
-                  return;
-                }
-
-                lastReplayId = data.event.replayId;
-
-                node.status({ fill: 'green', shape: 'dot', text: 'Receiving data' });
-                node.send({
-                  payload: data
-                });
-                node.status({ fill: 'blue', shape: 'dot', text: subscriptionMessage });
-              });
-            })
-            .catch((err) => {
-              node.status({
-                fill: 'red',
-                shape: 'dot',
-                text: 'Error:' + err.message
-              });
-              return node.error(err, err.message);
-            });
-        }
-      } else {
-        // Unsubscribe only for active subscriptions
-        if (node.client.disconnect) {
-          node.client.disconnect();
-          node.status({ fill: 'gray', shape: 'ring', text: 'idle' });
-          node.subscriptionActive = false;
-        }
-      }
-    });
   }
 
+  actionHelper.idle(node);
+};
+
+const handleStreamError = (node, err) => {
+  node.log('Subscription error!!!');
+  actionHelper.error(node, err.message, err);
+  node.client.disconnect();
+  node.subscriptionActive = false;
+  return node.error(err, err.message);
+};
+
+const handleStreamData = (node, data) => {
+  const lastReplayId = node.lastReplayId || node.startSubscriptionId;
+  const newReplayId = data.event.replayId;
+  if (lastReplayId === newReplayId) {
+    // TODO: should a duplicate replay Error be swallowed?
+    const err = new Error('Duplicate replay id');
+    actionHelper.error(node, newReplayId, err);
+    return;
+  }
+  actionHelper.receiving(node);
+  node.send({
+    payload: data
+  });
+  actionHelper.subscribed(node, node.subscriptionMessage);
+};
+
+const createSubscription = (node, org, msg, resolve, reject) => {
+  if (node.subscriptionActive) {
+    if (node.config.resubScribeOnDoubeSubscription) {
+      // Terminate subscription first, ignore the resolve/reject
+      terminateSubscription(node, () => {}, () => {});
+    } else {
+      // We don't subscribe again
+      resolve();
+      return;
+    }
+  }
+  const config = node.config;
+  const subscriptionOpts = {
+    // Topic in message takes priority over configuration
+    topic: msg.topic || config.pushTopic,
+    replayId: msg.replayId || node.startSubscriptionId
+  };
+
+  try {
+    node.subscriptionMessage = 'Subscribed to:' + subscriptionOpts.topic;
+    node.client = org.createStreamClient();
+    const stream = node.client.subscribe(subscriptionOpts);
+    node.log(node.subscriptionMessage);
+    node.subscriptionActive = true;
+    stream.on('error', (err) => handleStreamError(node, err));
+    stream.on('data', (data) => handleStreamData(node, data));
+  } catch (ex) {
+    reject(ex);
+  }
+
+  actionHelper.subscribed(node, node.subscriptionMessage);
+  resolve();
+};
+
+const terminateSubscription = (node, resolve, reject) => {
+  // Terminate in any case
+  if (node.subscriptionActive) {
+    node.subscriptionActive = false;
+    try {
+      if (node.client.disconnect) {
+        node.client.disconnect();
+        node.status({ fill: 'gray', shape: 'ring', text: 'idle' });
+        resolve();
+      }
+    } catch (err) {
+      reject(err);
+    }
+  } else {
+    // Nothing to do for an inactive connection
+    resolve();
+  }
+};
+
+const handleInput = (node, msg) => {
+  const action = msg.action || (node.subscriptionActive ? 'unsubscribe' : 'subscribe');
+  const realAction = (org) => {
+    return new Promise((resolve, reject) => {
+      if (action === 'subscribe') {
+        createSubscription(node, org, msg, resolve, reject);
+      } else {
+        terminateSubscription(node, resolve, reject);
+      }
+    });
+  };
+  actionHelper.inputToSFAction(node, msg, realAction);
+};
+
+// Make available to NodeRED
+module.exports = function(RED) {
+  function Streaming(config) {
+    const node = this;
+    node.connection = RED.nodes.getNode(config.connection);
+    setupSubscriptionNode(node, config);
+    node.on('input', (msg) => handleInput(node, msg));
+    RED.nodes.createNode(node, config);
+  }
   RED.nodes.registerType('streaming', Streaming);
 };
