@@ -19,7 +19,7 @@ describe('Salesforce SOQL Node', function() {
   });
 
   it('should be loaded', function(done) {
-    const flow = [{ id: 'n1', type: 'soql', name: 'soql' }];
+    const flow = [{ id: 'n1', type: 'sfdc-soql', name: 'soql' }];
     helper.load(soqlNode, flow, function() {
       const n1 = helper.getNode('n1');
       should(n1).have.property('name', 'soql');

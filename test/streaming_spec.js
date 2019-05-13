@@ -19,7 +19,7 @@ describe('Salesforce Streaming Node', function() {
   });
 
   it('should be loaded', function(done) {
-    const flow = [{ id: 'n1', type: 'streaming', name: 'streaming' }];
+    const flow = [{ id: 'n1', type: 'sfdc-streaming', name: 'streaming' }];
     helper.load(streamingNode, flow, function() {
       const n1 = helper.getNode('n1');
       should(n1).have.property('name', 'streaming');

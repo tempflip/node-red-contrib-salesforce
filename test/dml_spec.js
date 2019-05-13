@@ -19,7 +19,7 @@ describe('Salesforce DML Node', function() {
   });
 
   it('should be loaded', function(done) {
-    const flow = [{ id: 'n1', type: 'dml', name: 'dml' }];
+    const flow = [{ id: 'n1', type: 'sfdc-dml', name: 'dml' }];
     helper.load(dmlNode, flow, function() {
       const n1 = helper.getNode('n1');
       should(n1).have.property('name', 'dml');

@@ -19,7 +19,7 @@ describe('Salesforce SOSL Node', function() {
   });
 
   it('should be loaded', function(done) {
-    const flow = [{ id: 'n1', type: 'sosl', name: 'sosl' }];
+    const flow = [{ id: 'n1', type: 'sfdc-sosl', name: 'sosl' }];
     helper.load(soslNode, flow, function() {
       const n1 = helper.getNode('n1');
       should(n1).have.property('name', 'sosl');

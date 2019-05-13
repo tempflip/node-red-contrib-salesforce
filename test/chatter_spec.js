@@ -19,7 +19,7 @@ describe('Salesforce Chatter Node', function() {
   });
 
   it('should be loaded', function(done) {
-    const flow = [{ id: 'n1', type: 'chatter', name: 'chatter' }];
+    const flow = [{ id: 'n1', type: 'sfdc-chatter', name: 'chatter' }];
     helper.load(chatterNode, flow, function() {
       const n1 = helper.getNode('n1');
       should(n1).have.property('name', 'chatter');

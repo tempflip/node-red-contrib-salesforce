@@ -19,7 +19,7 @@ describe('Salesforce OBM Node', function() {
   });
 
   it('should be loaded', function(done) {
-    const flow = [{ id: 'n1', type: 'obm', name: 'obm' }];
+    const flow = [{ id: 'n1', type: 'sfdc-obm', name: 'obm' }];
     helper.load(obmNode, flow, function() {
       const n1 = helper.getNode('n1');
       should(n1).have.property('name', 'obm');
@@ -28,7 +28,7 @@ describe('Salesforce OBM Node', function() {
   });
 
   it('should return a SOAP message', (done) => {
-    const flow = [{ id: 'n1', type: 'obm', name: 'obm', wires: [[], ['n2']] }, { id: 'n2', type: 'helper' }];
+    const flow = [{ id: 'n1', type: 'sfdc-obm', name: 'obm', wires: [[], ['n2']] }, { id: 'n2', type: 'helper' }];
     helper.load(obmNode, flow, () => {
       var n2 = helper.getNode('n2');
       var n1 = helper.getNode('n1');
